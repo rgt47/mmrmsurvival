@@ -1,0 +1,115 @@
+---
+title: "MMRM vs. Survival analysis for AD clinical trials"
+author: "R.G. Thomas"
+date: "`r Sys.Date()`"
+fontsize: 11pt
+geometry: "left=3cm,right=3in,top=2cm,bottom=2cm"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    number_sections: true
+    highlight: tango
+    keep_tex: true 
+    includes:
+      in_header: "~/shr/preamble.tex"
+header-includes:
+   - \rhead{Lab report}
+   - \fancyfoot[L]{\currfilename} %put current file in footer
+   - \setlength{\headheight}{13.59999pt}
+bibliography: '`r normalizePath("x18.bib")`'
+---
+
+<!-- your comment 
+\input{notes.tex}
+\hspace{4in}
+\fbox{
+\parbox{3in}{\Large 
+Notes: 
+\begin{itemize}
+\item a \\
+\item b  \\
+\end{itemize}
+}
+}
+-->
+
+```{r  include=FALSE, echo=F}
+rm(list = ls())
+wh <- which(search() == "package:nvimcom")
+if (wh > 2) {
+  for (x in (wh - 1):2) {
+    detach(po = x, force = T)
+  }
+}
+rm(wh)
+options(
+  knitr.kable.NA = "", dplyr.summarise.inform = FALSE,
+  dplyr.print_max = 1e9, knitr.table.format = "latex"
+)
+library(pacman)
+p_load(skimr, janitor, kableExtra, tidyverse, knitr, lubridate, readxl)
+
+opts_chunk$set(
+  warning = F, message = F, echo = F, fig.width = 3.2,
+  fig.height = 3, results = "asis", dev = "pdf",
+  opts_chunk$set(cache.path = "cache/")
+)
+source("~/shr/zz.tools.R")
+options(scipen = 1, digits = 2)
+```
+
+<!-- your comment 
+\listoftodos
+\lipsum[2]
+\todo[inline, color=cyan]{The original todo note withouth changed colours.\newline Here's another line.}
+\begin{wrapfigure}{r}[.4\textwidth]{.4\textwidth}%
+\textit{\sffamily\normalsize\textcolor{gray!50}{
+Tornado plot: x-axis participants IDs y-axis study visits plot mean of cumulative
+AEs stratified by pre-covid and post-covid study visits (March 12 is
+the date we are using as a cut-point: through March 12 is pre-COVID,
+after March 12 is post-COVID) }}% 
+\end{wrapfigure}
+\lipsum[2]
+
+Sample reference section reference. @Pocock1975a
+
+\begin{marginfigure}
+\includegraphics[width=3in]{/Users/zenn/shr/images/sudoku-3d-cube.pdf} \caption{test}\label{fig:unnamed-chunk-8}
+\end{marginfigure}
+
+My most common usage of the todonotes package, is to insert an uncustomized
+todonotes somewhere in a latex document. An example of this usage is the command
+\todo{Make a cake \ldots},
+\lipsum[1]
+\todo[color=green]{Make a pie \ldots},
+\lipsum[1] 
+\todo{Make a joke \ldots},
+\listoftodos
+-->
+
+
+# Introduction
+Consider the different alternatives in a prospective clinical trial. 
+There is incidence, time to event, slope, AUC etc. 
+
+How do analytic methods compare for these difference "estimands."
+
+Consider missing data constructs, MCAR, MAR, MNAR. 
+
+How do analytic methods compare for these difference missing data constructs? 
+
+Start review with Mike D's 2012 paper. 
+@donohueMixedModelRepeated2012a
+
+# Methods
+
+# Results
+# Code 
+
+<!-- your comment 
+```{r, attr.source='.numberLines', ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
+-->
+
+# References

@@ -10,6 +10,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     container: rocker/r-ver:latest  # Smaller image (800 MB vs 2.5 GB)
+    env:
+      ZZCOLLAB_CONTAINER: "true"
 
     steps:
       - uses: actions/checkout@v4

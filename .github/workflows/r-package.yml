@@ -37,6 +37,7 @@ jobs:
 
       - name: Restore packages from renv.lock
         run: |
+          Rscript -e "install.packages('renv', repos = 'https://cloud.r-project.org')"
           Rscript -e "renv::restore()"
           # Installs exact package versions for reproducible testing
 

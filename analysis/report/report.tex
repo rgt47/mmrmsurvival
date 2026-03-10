@@ -1,0 +1,812 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  11pt,
+]{article}
+\usepackage{xcolor}
+\usepackage[left=3cm,right=3cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={MMRM vs.~Survival Analysis for AD Clinical Trials: A Historical Review and Simulation Study},
+  pdfauthor={R.G. Thomas},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{MMRM vs.~Survival Analysis for AD Clinical Trials: A Historical
+Review and Simulation Study}
+\author{R.G. Thomas}
+\date{2026-03-10}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\section{Introduction}\label{introduction}
+
+\subsection{The divergent paths of clinical trial
+analysis}\label{the-divergent-paths-of-clinical-trial-analysis}
+
+The statistical analysis of clinical trials has followed markedly
+different trajectories across therapeutic areas. In oncology,
+time-to-event endpoints analyzed by survival methods remain the
+regulatory gold standard, with overall survival serving as the
+definitive measure of treatment efficacy (U.S. Food and Drug
+Administration 2018a; Fleming and DeMets 1996). In contrast, Alzheimer's
+disease (AD) and other neurodegenerative disease trials have converged
+on change-from-baseline estimands analyzed by the mixed model for
+repeated measures (MMRM) as the primary analytic framework (Donohue and
+Aisen 2012; Mallinckrodt, Sanger, et al. 2003). This divergence is not
+an accident of history but rather reflects fundamental differences in
+disease biology, regulatory philosophy, and the statistical properties
+of the available endpoints.
+
+This manuscript traces the historical developments that led to the
+current analytic conventions in each field and presents a simulation
+study comparing MMRM and survival analysis applied to the same
+underlying disease process, using the Clinical Dementia Rating (CDR)
+scale as the primary measure.
+
+\subsection{Regulatory origins: the FDA dual-outcome
+requirement}\label{regulatory-origins-the-fda-dual-outcome-requirement}
+
+The regulatory framework for AD clinical trials was shaped decisively by
+the 1990 FDA guidelines authored by Paul Leber, which required
+demonstration of efficacy on two co-primary endpoints: one cognitive
+(such as the Alzheimer's Disease Assessment Scale-Cognitive Subscale,
+ADAS-Cog) and one global or functional measure (Leber 1990; Rosen et al.
+1984). The rationale was that a statistically significant difference on
+a psychometric test alone might not reflect clinically meaningful
+change; a second, independent measure of global function was needed to
+confirm relevance. This dual-outcome requirement established the
+precedent that AD trials would be evaluated on the magnitude and
+direction of change from baseline, rather than on the occurrence of
+discrete clinical events.
+
+The ADAS-Cog, developed by Rosen et al. (1984), and the CDR, codified by
+Morris (1993), became the two pillars of AD trial assessment. The CDR in
+particular provided both a global staging instrument (the global CDR
+score, ranging from 0 to 3) and a sum-of-boxes score (CDR-SB, ranging
+from 0 to 18) that offered a quasi-continuous measure of disease
+severity suitable for change-score analysis. The 2018 FDA guidance on
+early AD further reinforced the change-from-baseline paradigm, while
+allowing greater flexibility in endpoint selection for earlier disease
+stages (U.S. Food and Drug Administration 2018b).
+
+\subsection{The fall of LOCF and the rise of
+MMRM}\label{the-fall-of-locf-and-the-rise-of-mmrm}
+
+Through the 1990s, the standard analytic approach for AD trials was last
+observation carried forward (LOCF) combined with analysis of covariance
+(ANCOVA) at the final time point. Under LOCF, a participant's last
+observed value is imputed for all subsequent missing visits, and the
+analysis proceeds as if no data were missing. This approach was
+computationally convenient and widely accepted by regulators, but it
+rests on the untenable assumption that a participant's trajectory would
+have remained flat from the time of dropout---an assumption grossly
+violated in progressive diseases where dropout is often driven by
+worsening symptoms.
+
+The foundational work of Mallinckrodt et al. (2001a) and Mallinckrodt et
+al. (2001b) demonstrated through simulation that LOCF produces
+substantially biased treatment effect estimates and inflated Type I
+error rates when dropout is differential between treatment arms. In a
+progressive disease like AD, where placebo-arm participants tend to drop
+out at higher rates due to worsening, LOCF paradoxically imputes
+favorable values for the placebo group (freezing them at an earlier,
+less impaired state), thereby attenuating the estimated treatment
+effect. Conversely, if active-treatment participants drop out due to
+adverse events while still relatively well, LOCF preserves their
+favorable scores, inflating the apparent benefit.
+
+Mallinckrodt, Sanger, et al. (2003) and Mallinckrodt, Clark, et al.
+(2003) extended this work by comparing LOCF to the mixed model for
+repeated measures (MMRM), which uses all observed data under a
+likelihood-based framework that is valid when data are missing at random
+(MAR). Unlike LOCF, MMRM does not impute missing values; instead, it
+borrows information from the observed correlation structure across time
+points to provide unbiased estimates under MAR. O'Brien et al. (2005)
+proposed alternative semi-parametric and non-parametric methods and
+found that MMRM performed comparably to their proposed approaches while
+making less restrictive assumptions. Molenberghs et al. (2004) provided
+the theoretical underpinning for likelihood-based analyses of incomplete
+longitudinal data.
+
+By the mid-2000s, the weight of evidence against LOCF was overwhelming,
+and the 2010 National Research Council panel report, commissioned by the
+FDA, formally recommended against single imputation methods and endorsed
+likelihood-based and multiple imputation approaches as preferred
+alternatives (National Research Council 2010). The ICH E9(R1) addendum
+on estimands further clarified the conceptual framework by requiring
+explicit specification of the target estimand---including how
+intercurrent events such as treatment discontinuation are
+handled---before selecting an analytic method (International Council for
+Harmonisation 2019).
+
+\subsection{MMRM as the primary analysis in
+AD}\label{mmrm-as-the-primary-analysis-in-ad}
+
+Donohue and Aisen (2012) compared MMRM, slope models, and quadratic
+models across five AD Cooperative Study (ADCS) trials and found that
+MMRM, which treats time as categorical and imposes no parametric
+assumptions on the mean trajectory, provided robust estimates across a
+range of disease stages and trial durations. Although continuous time
+(slope) models can be more statistically efficient when the linearity
+assumption holds, the unstructured mean of MMRM offers protection
+against model misspecification in a disease where trajectories are
+heterogeneous and potentially nonlinear. Wang et al. (2018) proposed a
+disease progression model (DPM) with proportional treatment effects and
+demonstrated power gains over MMRM in autosomal dominant AD, though the
+DPM requires stronger parametric assumptions that may limit
+generalizability.
+
+Today, virtually every pivotal AD trial uses MMRM or a close variant as
+the pre-specified primary analysis. The aducanumab EMERGE and ENGAGE
+trials (Budd Haeberlein et al. 2022) and the lecanemab Study 201 (Dhadda
+et al. 2022) all employed MMRM with change from baseline in CDR-SB as
+the primary endpoint, with sensitivity analyses from DPM and other
+longitudinal models used to assess robustness.
+
+\subsection{Why survival analysis persists in
+oncology}\label{why-survival-analysis-persists-in-oncology}
+
+In oncology, the natural endpoint is death, and overall survival (OS)
+has served as the primary measure of treatment efficacy since the
+earliest cancer clinical trials. OS is binary, unambiguous, and
+universally meaningful. Fleming and DeMets (1996) cautioned against
+replacing OS with surrogate endpoints unless rigorous validation
+criteria are met, and the FDA has historically required OS data for full
+(as opposed to accelerated) approval of cancer drugs (U.S. Food and Drug
+Administration 2018a). Even when progression-free survival or response
+rate serves as the primary endpoint for accelerated approval,
+confirmatory trials typically require OS data.
+
+The persistence of survival analysis in oncology reflects several
+features that distinguish it from AD: (1) a clearly defined,
+irreversible event (death); (2) a well-understood proportional hazards
+framework with established regulatory precedent; (3) a tradition of
+interim analyses based on information fractions from event counts; and
+(4) the absence of a continuous, validated severity measure that changes
+monotonically and is universally accepted across tumor types.
+
+\subsection{Rate of change vs.~time to event in
+AD}\label{rate-of-change-vs.-time-to-event-in-ad}
+
+Given that CDR and similar scales can be used to define both change
+scores (amenable to MMRM) and threshold crossings (amenable to survival
+analysis), the question arises: what is the relative efficiency of these
+two approaches when applied to the same underlying data?
+
+Donohue et al. (2011) derived an analytic inflation factor comparing Cox
+proportional hazards models of time to a threshold with linear models of
+continuous outcomes, and demonstrated through simulation that linear
+models consistently yielded greater statistical power for detecting
+treatment effects in ADNI data. Li et al. (2019) extended this work to
+presymptomatic AD, finding that power was approximately doubled with
+repeated continuous measures compared to time-to-progression analysis.
+Jönsson et al. (2024) introduced a progression model for repeated
+measures (PMRM) that expresses treatment effects in time units (days of
+delay) rather than CDR-SB points, offering a clinically interpretable
+alternative while maintaining efficiency comparable to MMRM. Ito and
+Hutmacher (2014) modeled CDR-SB trajectories to predict time to
+clinically meaningful worsening in MCI patients, finding that the median
+time to a 1-point change was approximately 2 years---informing both
+trial duration and sample size planning.
+
+\subsection{Present study}\label{present-study}
+
+Despite the theoretical and empirical evidence favoring continuous
+measures, the comparison between MMRM and survival analysis for AD
+endpoints has not been systematically examined in a simulation that uses
+the global CDR as both a continuous outcome and the basis for a survival
+endpoint defined by conversion from CDR 0.5 (MCI/very mild dementia) to
+CDR 1.0 or higher (mild dementia). The present study addresses this gap
+through a Monte Carlo simulation that generates realistic CDR
+trajectories under a plausible data-generating model and compares the
+statistical properties of MMRM and Cox regression applied to the same
+simulated trial data.
+
+\section{Methods}\label{methods}
+
+\subsection{Data generating model}\label{data-generating-model}
+
+We simulate a two-arm, placebo-controlled trial with \(n = 200\)
+participants per arm, all entering with a baseline global CDR of 0.5.
+The primary continuous outcome is the global CDR score observed at
+visits scheduled every 6 months over 24 months (5 post-baseline visits).
+The survival endpoint is time to conversion from CDR 0.5 to CDR \(\geq\)
+1.0.
+
+The latent continuous disease severity \(Y_{ij}^*\) for participant
+\(i\) at visit \(j\) is modeled as:
+
+\[
+Y_{ij}^* = \beta_0 + \beta_1 t_j + \beta_2 T_i
+  + \beta_3 (t_j \times T_i) + b_{0i} + b_{1i} t_j
+  + \epsilon_{ij}
+\]
+
+where \(t_j\) is visit time in years, \(T_i\) is the treatment indicator
+(0 = placebo, 1 = active), \(b_{0i}\) and \(b_{1i}\) are
+participant-specific random intercepts and slopes drawn from a bivariate
+normal distribution, and \(\epsilon_{ij} \sim N(0, \sigma^2)\) is
+residual error.
+
+The observed global CDR is obtained by mapping \(Y^*\) to the CDR
+staging categories \{0, 0.5, 1, 2, 3\} using threshold parameters
+calibrated to observed CDR distributions in ADNI.
+
+\subsection{Parameter values}\label{parameter-values}
+
+The simulation parameters are selected to reflect plausible progression
+rates in a population with MCI due to AD (CDR 0.5 at baseline):
+
+\begin{table}[!h]
+\centering
+\caption{\label{tab:sim-params}Simulation parameter values.}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{lll}
+\toprule
+Parameter & Value & Description\\
+\midrule
+$\beta_0$ & 0.5 & Baseline CDR (MCI)\\
+$\beta_1$ & 0.30 & Annual rate, placebo (CDR/yr)\\
+$\beta_2$ & 0.00 & Baseline treatment effect\\
+$\beta_3$ & -0.075 & Treatment x time (25\% slowing)\\
+$\sigma_b^2$ (intercept) & 0.04 & Random intercept variance\\
+\addlinespace
+$\sigma_b^2$ (slope) & 0.02 & Random slope variance\\
+$\rho$ & 0.3 & Intercept-slope correlation\\
+$\sigma^2$ & 0.01 & Residual variance\\
+Dropout rate & 15\%/year & MAR dropout, severity-dependent\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Design specifications}\label{design-specifications}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Sample size:} 200 per arm (400 total)
+\item
+  \textbf{Visit schedule:} Baseline, 6, 12, 18, 24 months
+\item
+  \textbf{Survival endpoint:} Time from randomization to first visit
+  with global CDR \(\geq\) 1.0
+\item
+  \textbf{MMRM endpoint:} Change from baseline in latent CDR score at 24
+  months
+\item
+  \textbf{Treatment effect:} 25\% slowing of progression (hazard ratio
+  \(\approx\) 0.75 for the survival endpoint)
+\end{itemize}
+
+\subsection{Simulation procedure}\label{simulation-procedure}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sim\_trial }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(}\AttributeTok{n\_per\_arm =} \DecValTok{200}\NormalTok{,}
+                      \AttributeTok{n\_visits =} \DecValTok{5}\NormalTok{,}
+                      \AttributeTok{beta =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.5}\NormalTok{, }\FloatTok{0.30}\NormalTok{, }\DecValTok{0}\NormalTok{, }\SpecialCharTok{{-}}\FloatTok{0.075}\NormalTok{),}
+                      \AttributeTok{sigma\_b =} \FunctionTok{matrix}\NormalTok{(}
+                        \FunctionTok{c}\NormalTok{(}\FloatTok{0.04}\NormalTok{, }\FloatTok{0.3} \SpecialCharTok{*} \FunctionTok{sqrt}\NormalTok{(}\FloatTok{0.04} \SpecialCharTok{*} \FloatTok{0.02}\NormalTok{),}
+                          \FloatTok{0.3} \SpecialCharTok{*} \FunctionTok{sqrt}\NormalTok{(}\FloatTok{0.04} \SpecialCharTok{*} \FloatTok{0.02}\NormalTok{), }\FloatTok{0.02}\NormalTok{),}
+                        \DecValTok{2}\NormalTok{, }\DecValTok{2}
+\NormalTok{                      ),}
+                      \AttributeTok{sigma\_e =} \FloatTok{0.1}\NormalTok{,}
+                      \AttributeTok{dropout\_rate =} \FloatTok{0.15}\NormalTok{) \{}
+\NormalTok{  n }\OtherTok{\textless{}{-}} \DecValTok{2} \SpecialCharTok{*}\NormalTok{ n\_per\_arm}
+\NormalTok{  trt }\OtherTok{\textless{}{-}} \FunctionTok{rep}\NormalTok{(}\DecValTok{0}\SpecialCharTok{:}\DecValTok{1}\NormalTok{, }\AttributeTok{each =}\NormalTok{ n\_per\_arm)}
+\NormalTok{  times }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\FloatTok{0.5}\NormalTok{, }\FloatTok{2.5}\NormalTok{, }\AttributeTok{by =} \FloatTok{0.5}\NormalTok{)}
+
+\NormalTok{  re }\OtherTok{\textless{}{-}}\NormalTok{ MASS}\SpecialCharTok{::}\FunctionTok{mvrnorm}\NormalTok{(n, }\AttributeTok{mu =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\AttributeTok{Sigma =}\NormalTok{ sigma\_b)}
+
+\NormalTok{  records }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{()}
+  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \FunctionTok{seq\_len}\NormalTok{(n)) \{}
+\NormalTok{    y\_star }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(n\_visits)}
+\NormalTok{    dropped }\OtherTok{\textless{}{-}} \ConstantTok{FALSE}
+    \ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \FunctionTok{seq\_len}\NormalTok{(n\_visits)) \{}
+      \ControlFlowTok{if}\NormalTok{ (dropped) }\ControlFlowTok{next}
+\NormalTok{      t\_j }\OtherTok{\textless{}{-}}\NormalTok{ times[j]}
+\NormalTok{      mu\_ij }\OtherTok{\textless{}{-}}\NormalTok{ beta[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{+}\NormalTok{ beta[}\DecValTok{2}\NormalTok{] }\SpecialCharTok{*}\NormalTok{ t\_j }\SpecialCharTok{+}
+\NormalTok{        beta[}\DecValTok{3}\NormalTok{] }\SpecialCharTok{*}\NormalTok{ trt[i] }\SpecialCharTok{+}\NormalTok{ beta[}\DecValTok{4}\NormalTok{] }\SpecialCharTok{*}\NormalTok{ (t\_j }\SpecialCharTok{*}\NormalTok{ trt[i]) }\SpecialCharTok{+}
+\NormalTok{        re[i, }\DecValTok{1}\NormalTok{] }\SpecialCharTok{+}\NormalTok{ re[i, }\DecValTok{2}\NormalTok{] }\SpecialCharTok{*}\NormalTok{ t\_j}
+\NormalTok{      y\_star[j] }\OtherTok{\textless{}{-}}\NormalTok{ mu\_ij }\SpecialCharTok{+} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, sigma\_e)}
+\NormalTok{      cdr\_obs }\OtherTok{\textless{}{-}} \FunctionTok{cut}\NormalTok{(}
+\NormalTok{        y\_star[j],}
+        \AttributeTok{breaks =} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\ConstantTok{Inf}\NormalTok{, }\FloatTok{0.25}\NormalTok{, }\FloatTok{0.75}\NormalTok{, }\FloatTok{1.5}\NormalTok{, }\FloatTok{2.5}\NormalTok{, }\ConstantTok{Inf}\NormalTok{),}
+        \AttributeTok{labels =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FloatTok{0.5}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{)}
+\NormalTok{      )}
+\NormalTok{      cdr\_obs }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{as.character}\NormalTok{(cdr\_obs))}
+\NormalTok{      p\_drop }\OtherTok{\textless{}{-}} \DecValTok{1} \SpecialCharTok{{-}} \FunctionTok{exp}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{dropout\_rate }\SpecialCharTok{*} \FloatTok{0.5} \SpecialCharTok{*}
+\NormalTok{        (}\DecValTok{1} \SpecialCharTok{+} \FloatTok{0.5} \SpecialCharTok{*}\NormalTok{ (y\_star[j] }\SpecialCharTok{{-}} \FloatTok{0.5}\NormalTok{)))}
+      \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{runif}\NormalTok{(}\DecValTok{1}\NormalTok{) }\SpecialCharTok{\textless{}}\NormalTok{ p\_drop) dropped }\OtherTok{\textless{}{-}} \ConstantTok{TRUE}
+\NormalTok{      records[[}\FunctionTok{length}\NormalTok{(records) }\SpecialCharTok{+} \DecValTok{1}\NormalTok{]] }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+        \AttributeTok{id =}\NormalTok{ i, }\AttributeTok{trt =}\NormalTok{ trt[i], }\AttributeTok{visit =}\NormalTok{ j,}
+        \AttributeTok{time =}\NormalTok{ t\_j, }\AttributeTok{y\_star =}\NormalTok{ y\_star[j],}
+        \AttributeTok{cdr =}\NormalTok{ cdr\_obs}
+\NormalTok{      )}
+\NormalTok{    \}}
+\NormalTok{  \}}
+  \FunctionTok{do.call}\NormalTok{(rbind, records)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+For each of \(R = 2000\) replications, we:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Generate a complete trial dataset using the model above.
+\item
+  Apply severity-dependent MAR dropout.
+\item
+  Fit an MMRM to the change from baseline in the latent CDR score, with
+  treatment, visit, treatment-by-visit interaction, and baseline score
+  as covariates, using an unstructured covariance matrix.
+\item
+  Fit a Cox proportional hazards model to time to first CDR \(\geq\)
+  1.0, with treatment as the sole covariate.
+\item
+  Record the treatment effect estimate, standard error, p-value, and
+  95\% confidence interval from each model.
+\end{enumerate}
+
+\subsection{Analysis plan}\label{analysis-plan}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit\_mmrm }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(dat) \{}
+\NormalTok{  dat }\OtherTok{\textless{}{-}}\NormalTok{ dat }\SpecialCharTok{|\textgreater{}}
+    \FunctionTok{group\_by}\NormalTok{(id) }\SpecialCharTok{|\textgreater{}}
+    \FunctionTok{mutate}\NormalTok{(}
+      \AttributeTok{baseline =} \FunctionTok{first}\NormalTok{(y\_star),}
+      \AttributeTok{change =}\NormalTok{ y\_star }\SpecialCharTok{{-}}\NormalTok{ baseline}
+\NormalTok{    ) }\SpecialCharTok{|\textgreater{}}
+    \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{|\textgreater{}}
+    \FunctionTok{filter}\NormalTok{(visit }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{visit\_f =} \FunctionTok{factor}\NormalTok{(visit))}
+
+\NormalTok{  mod }\OtherTok{\textless{}{-}}\NormalTok{ nlme}\SpecialCharTok{::}\FunctionTok{gls}\NormalTok{(}
+\NormalTok{    change }\SpecialCharTok{\textasciitilde{}}\NormalTok{ trt }\SpecialCharTok{*}\NormalTok{ visit\_f }\SpecialCharTok{+}\NormalTok{ baseline,}
+    \AttributeTok{data =}\NormalTok{ dat,}
+    \AttributeTok{correlation =}\NormalTok{ nlme}\SpecialCharTok{::}\FunctionTok{corSymm}\NormalTok{(}\AttributeTok{form =} \SpecialCharTok{\textasciitilde{}}\NormalTok{ visit }\SpecialCharTok{|}\NormalTok{ id),}
+    \AttributeTok{weights =}\NormalTok{ nlme}\SpecialCharTok{::}\FunctionTok{varIdent}\NormalTok{(}\AttributeTok{form =} \SpecialCharTok{\textasciitilde{}} \DecValTok{1} \SpecialCharTok{|}\NormalTok{ visit\_f),}
+    \AttributeTok{na.action =}\NormalTok{ na.omit}
+\NormalTok{  )}
+\NormalTok{  trt\_24 }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(mod)}\SpecialCharTok{$}\NormalTok{tTable[}\StringTok{"trt"}\NormalTok{, ]}
+  \FunctionTok{c}\NormalTok{(}\AttributeTok{est =}\NormalTok{ trt\_24[}\DecValTok{1}\NormalTok{], }\AttributeTok{se =}\NormalTok{ trt\_24[}\DecValTok{2}\NormalTok{], }\AttributeTok{p =}\NormalTok{ trt\_24[}\DecValTok{4}\NormalTok{])}
+\NormalTok{\}}
+
+\NormalTok{fit\_cox }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(dat) \{}
+\NormalTok{  surv\_dat }\OtherTok{\textless{}{-}}\NormalTok{ dat }\SpecialCharTok{|\textgreater{}}
+    \FunctionTok{group\_by}\NormalTok{(id) }\SpecialCharTok{|\textgreater{}}
+    \FunctionTok{summarise}\NormalTok{(}
+      \AttributeTok{trt =} \FunctionTok{first}\NormalTok{(trt),}
+      \AttributeTok{event\_time =}\NormalTok{ \{}
+\NormalTok{        conv }\OtherTok{\textless{}{-}} \FunctionTok{which}\NormalTok{(cdr }\SpecialCharTok{\textgreater{}=} \DecValTok{1}\NormalTok{)}
+        \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{length}\NormalTok{(conv) }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{) time[conv[}\DecValTok{1}\NormalTok{]] }\ControlFlowTok{else} \FunctionTok{max}\NormalTok{(time)}
+\NormalTok{      \},}
+      \AttributeTok{event =} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{any}\NormalTok{(cdr }\SpecialCharTok{\textgreater{}=} \DecValTok{1}\NormalTok{)),}
+      \AttributeTok{.groups =} \StringTok{"drop"}
+\NormalTok{    )}
+\NormalTok{  mod }\OtherTok{\textless{}{-}} \FunctionTok{coxph}\NormalTok{(}
+    \FunctionTok{Surv}\NormalTok{(event\_time, event) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ trt,}
+    \AttributeTok{data =}\NormalTok{ surv\_dat}
+\NormalTok{  )}
+\NormalTok{  s }\OtherTok{\textless{}{-}} \FunctionTok{summary}\NormalTok{(mod)}
+  \FunctionTok{c}\NormalTok{(}
+    \AttributeTok{est =} \FunctionTok{coef}\NormalTok{(mod),}
+    \AttributeTok{se =}\NormalTok{ s}\SpecialCharTok{$}\NormalTok{coefficients[, }\StringTok{"se(coef)"}\NormalTok{],}
+    \AttributeTok{p =}\NormalTok{ s}\SpecialCharTok{$}\NormalTok{coefficients[, }\StringTok{"Pr(\textgreater{}|z|)"}\NormalTok{]}
+\NormalTok{  )}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Performance metrics}\label{performance-metrics}
+
+For each method, we compute:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Bias:} Mean estimate minus true parameter value
+\item
+  \textbf{Empirical SE:} Standard deviation of estimates across
+  replications
+\item
+  \textbf{Mean model-based SE:} Mean of estimated standard errors
+\item
+  \textbf{Power:} Proportion of replications with \(p < 0.05\)
+\item
+  \textbf{Coverage:} Proportion of 95\% CIs containing the true value
+\item
+  \textbf{Convergence rate:} Proportion of replications producing valid
+  estimates
+\end{itemize}
+
+\section{Results}\label{results}
+
+\subsection{Summary statistics}\label{summary-statistics}
+
+\emph{{[}Results table to be populated after simulation execution.{]}}
+
+\subsection{Figures}\label{figures}
+
+\section{Discussion}\label{discussion}
+
+The historical review reveals that the convergence of AD trials on MMRM
+and change-score estimands resulted from three reinforcing forces: (1)
+the regulatory requirement for continuous cognitive and functional
+co-primary endpoints, established by Leber (1990); (2) the decisive
+empirical evidence against LOCF as a primary analysis method, led by
+Mallinckrodt et al. (2001a) and codified by the National Research
+Council (2010) panel; and (3) the statistical efficiency advantages of
+modeling repeated continuous data relative to dichotomizing into
+time-to-event endpoints, as demonstrated by Donohue et al. (2011) and Li
+et al. (2019).
+
+Oncology, by contrast, arrived at a different equilibrium because its
+primary endpoint---death---is inherently binary and irreversible,
+because the proportional hazards framework has deep regulatory
+precedent, and because no single continuous severity measure plays the
+role that ADAS-Cog or CDR-SB plays in AD (Fleming and DeMets 1996; U.S.
+Food and Drug Administration 2018a).
+
+The simulation results are expected to confirm the theoretical
+predictions from the literature: MMRM should yield substantially greater
+power than Cox regression when both are applied to CDR data from the
+same simulated trial, because the continuous analysis uses information
+from the full trajectory of scores at every visit, whereas the survival
+analysis reduces this trajectory to a single binary event. The power
+advantage should be most pronounced in the MCI-to-mild-dementia
+transition modeled here, where conversion rates are modest and many
+participants in a 24-month trial will not reach the CDR \(\geq\) 1.0
+threshold, resulting in heavy right-censoring that limits the
+information available to the Cox model.
+
+Several caveats warrant emphasis. First, the comparison is inherently
+asymmetric: the MMRM uses more information from each participant (all
+visits) than the Cox model (only the first conversion event). Second,
+the survival endpoint is limited by the visit schedule; true conversion
+may occur between visits, introducing interval censoring that the
+standard Cox model does not accommodate. Third, the relative efficiency
+depends on the threshold chosen; a threshold that most participants
+cross during follow-up would shift the balance toward the survival
+analysis. Fourth, the clinical relevance of the two estimands differs: a
+treatment effect expressed as slowing of CDR-SB decline addresses a
+different clinical question than one expressed as delay to a diagnostic
+milestone. Both may be meaningful to patients and regulators, and the
+choice between them should be driven by the estimand framework of
+International Council for Harmonisation (2019) rather than by
+statistical convenience alone.
+
+\section{Future research}\label{future-research}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Additional covariance structures.} The present simulation
+  assumes MAR dropout. Extensions under MNAR mechanisms (e.g.,
+  pattern-mixture models, selection models) would illuminate the
+  robustness of each method under more adversarial missingness.
+\item
+  \textbf{Nonlinear trajectories.} AD progression is not strictly
+  linear, particularly in the transition from MCI to dementia.
+  Simulation of sigmoidal or piecewise trajectories would test the
+  sensitivity of MMRM (which makes no linearity assumption) relative to
+  slope-based alternatives.
+\item
+  \textbf{Alternative survival formulations.} Interval-censored survival
+  models and multi-state models that accommodate transitions among CDR
+  stages (0.5 \(\to\) 1 \(\to\) 2 \(\to\) 3) could recover some of the
+  information lost by standard Cox regression.
+\item
+  \textbf{Joint modeling.} Joint models of longitudinal CDR trajectories
+  and the time-to-conversion event could unify the two analytic
+  approaches, potentially offering both the efficiency of longitudinal
+  modeling and the clinical interpretability of a time-to-event
+  estimand.
+\item
+  \textbf{Software tools.} An R package implementing the simulation
+  framework and providing power calculation utilities for both MMRM and
+  survival designs in AD trials would facilitate trial planning.
+\item
+  \textbf{Applied validation.} Retrospective application of both methods
+  to completed trial datasets (e.g., from the ADCS or ADNI) would
+  ground-truth the simulation findings in real data with genuine
+  missingness patterns and measurement properties.
+\item
+  \textbf{Estimand alignment.} Further work is needed to clarify how the
+  ICH E9(R1) estimand framework should be applied when the same
+  underlying data support both change-score and time-to-event estimands,
+  particularly regarding the handling of intercurrent events such as
+  treatment switching or rescue medication.
+\end{enumerate}
+
+\section*{References}\label{references}
+\addcontentsline{toc}{section}{References}
+
+\protect\phantomsection\label{refs}
+\begin{CSLReferences}{1}{1}
+\bibitem[\citeproctext]{ref-buddhaeberlein2022aducanumab}
+Budd Haeberlein, S., P. S. Aisen, F. Barkhof, et al. 2022. {``Two
+Randomized Phase 3 Studies of Aducanumab in Early {Alzheimer's}
+Disease.''} \emph{The Journal of Prevention of Alzheimer's Disease} 9
+(2): 197--210. \url{https://doi.org/10.14283/jpad.2022.30}.
+
+\bibitem[\citeproctext]{ref-dhadda2022lecanemab}
+Dhadda, Shobha, Michio Kanekiyo, David Li, et al. 2022. {``Consistency
+of Efficacy Results Across Various Clinical Measures and Statistical
+Methods in the Lecanemab Phase 2 Trial of Early {Alzheimer's}
+Disease.''} \emph{Alzheimer's Research \& Therapy} 14 (1): 182.
+\url{https://doi.org/10.1186/s13195-022-01129-x}.
+
+\bibitem[\citeproctext]{ref-donohue2012mmrm}
+Donohue, M. C., and P. S. Aisen. 2012. {``Mixed Model of Repeated
+Measures Versus Slope Models in {Alzheimer's} Disease Clinical
+Trials.''} \emph{The Journal of Nutrition, Health \& Aging} 16 (4):
+360--64. \url{https://doi.org/10.1007/s12603-012-0047-7}.
+
+\bibitem[\citeproctext]{ref-donohue2011relative}
+Donohue, M. C., A. C. Gamst, R. G. Thomas, et al. 2011. {``The Relative
+Efficiency of Time-to-Threshold and Rate of Change in Longitudinal
+Data.''} \emph{Contemporary Clinical Trials} 32 (5): 685--93.
+\url{https://doi.org/10.1016/j.cct.2011.04.007}.
+
+\bibitem[\citeproctext]{ref-fleming1996surrogate}
+Fleming, Thomas R., and David L. DeMets. 1996. {``Surrogate End Points
+in Clinical Trials: Are We Being Misled?''} \emph{Annals of Internal
+Medicine} 125 (7): 605--13.
+\url{https://doi.org/10.7326/0003-4819-125-7-199610010-00011}.
+
+\bibitem[\citeproctext]{ref-ich2019e9r1}
+International Council for Harmonisation. 2019. \emph{{ICH E9(R1)}:
+Addendum on Estimands and Sensitivity Analysis in Clinical Trials to the
+Guideline on Statistical Principles for Clinical Trials}. ICH.
+
+\bibitem[\citeproctext]{ref-ito2014predicting}
+Ito, Kaori, and Matthew M. Hutmacher. 2014. {``Predicting the Time to
+Clinically Worsening in Mild Cognitive Impairment Patients and Its
+Utility in Clinical Trial Design by Modeling a Longitudinal {Clinical
+Dementia Rating Sum of Boxes} from the {ADNI} Database.''} \emph{Journal
+of Alzheimer's Disease} 40 (4): 967--79.
+\url{https://doi.org/10.3233/JAD-132090}.
+
+\bibitem[\citeproctext]{ref-jonsson2024progression}
+Jönsson, Linus, Milana Ivkovic, Alireza Atri, et al. 2024.
+{``Progression Analysis Versus Traditional Methods to Quantify Slowing
+of Disease Progression in {Alzheimer's} Disease.''} \emph{Alzheimer's
+Research \& Therapy} 16 (1): 48.
+\url{https://doi.org/10.1186/s13195-024-01413-y}.
+
+\bibitem[\citeproctext]{ref-leber1990guidelines}
+Leber, P. 1990. \emph{Guidelines for the Clinical Evaluation of
+Antidementia Drugs, First Draft}. U.S. Food; Drug Administration.
+
+\bibitem[\citeproctext]{ref-li2019relative}
+Li, Dan, Samuel Iddi, Paul S. Aisen, Wesley K. Thompson, and Michael C.
+Donohue. 2019. {``The Relative Efficiency of Time-to-Progression and
+Continuous Measures of Cognition in Presymptomatic {Alzheimer's}
+Disease.''} \emph{Alzheimer's \& Dementia: Translational Research \&
+Clinical Interventions} 5: 308--18.
+\url{https://doi.org/10.1016/j.trci.2019.04.004}.
+
+\bibitem[\citeproctext]{ref-mallinckrodt2003response}
+Mallinckrodt, Craig H., W. Scott Clark, Raymond J. Carroll, and Geert
+Molenberghs. 2003. {``Assessing Response Profiles from Incomplete
+Longitudinal Clinical Trial Data Under Regulatory Considerations.''}
+\emph{Journal of Biopharmaceutical Statistics} 13 (2): 179--90.
+\url{https://doi.org/10.1081/BIP-120019265}.
+
+\bibitem[\citeproctext]{ref-mallinckrodt2001dropout}
+Mallinckrodt, Craig H., W. Scott Clark, and Stacy R. David. 2001a.
+{``Accounting for Dropout Bias Using Mixed-Effects Models.''}
+\emph{Journal of Biopharmaceutical Statistics} 11 (1--2): 9--21.
+\url{https://doi.org/10.1081/BIP-100104194}.
+
+\bibitem[\citeproctext]{ref-mallinckrodt2001typei}
+Mallinckrodt, Craig H., W. Scott Clark, and Stacy R. David. 2001b.
+{``Type {I} Error Rates from Mixed Effects Model Repeated Measures
+Versus Fixed Effects {ANOVA} with Missing Values Imputed via Last
+Observation Carried Forward.''} \emph{Drug Information Journal} 35 (4):
+1215--25. \url{https://doi.org/10.1177/009286150103500418}.
+
+\bibitem[\citeproctext]{ref-mallinckrodt2003assessing}
+Mallinckrodt, Craig H., Todd M. Sanger, Sanjay Dubé, et al. 2003.
+{``Assessing and Interpreting Treatment Effects in Longitudinal Clinical
+Trials with Missing Data.''} \emph{Biological Psychiatry} 53 (8):
+754--60. \url{https://doi.org/10.1016/S0006-3223(02)01867-X}.
+
+\bibitem[\citeproctext]{ref-molenberghs2004analyzing}
+Molenberghs, Geert, Herbert Thijs, Ivy Jansen, et al. 2004. {``Analyzing
+Incomplete Longitudinal Clinical Trial Data.''} \emph{Biostatistics} 5
+(3): 445--64. \url{https://doi.org/10.1093/biostatistics/kxh001}.
+
+\bibitem[\citeproctext]{ref-morris1993cdr}
+Morris, John C. 1993. {``The {Clinical Dementia Rating} ({CDR}): Current
+Version and Scoring Rules.''} \emph{Neurology} 43 (11): 2412--14.
+\url{https://doi.org/10.1212/WNL.43.11.2412-a}.
+
+\bibitem[\citeproctext]{ref-nrc2010missing}
+National Research Council. 2010. \emph{The Prevention and Treatment of
+Missing Data in Clinical Trials}. The National Academies Press.
+\url{https://doi.org/10.17226/12955}.
+
+\bibitem[\citeproctext]{ref-obrien2005semiparametric}
+O'Brien, Peter C., David Zhang, and Kent R. Bailey. 2005.
+{``Semi-Parametric and Non-Parametric Methods for Clinical Trials with
+Incomplete Data.''} \emph{Statistics in Medicine} 24 (3): 341--58.
+\url{https://doi.org/10.1002/sim.1963}.
+
+\bibitem[\citeproctext]{ref-rosen1984adas}
+Rosen, W. G., R. C. Mohs, and K. L. Davis. 1984. {``A New Rating Scale
+for {Alzheimer's} Disease.''} \emph{The American Journal of Psychiatry}
+141 (11): 1356--64. \url{https://doi.org/10.1176/ajp.141.11.1356}.
+
+\bibitem[\citeproctext]{ref-fda2018oncology}
+U.S. Food and Drug Administration. 2018a. \emph{Clinical Trial Endpoints
+for the Approval of Cancer Drugs and Biologics. Guidance for Industry}.
+Center for Drug Evaluation; Research.
+
+\bibitem[\citeproctext]{ref-fda2018earlyad}
+U.S. Food and Drug Administration. 2018b. \emph{Early {Alzheimer's}
+Disease: Developing Drugs for Treatment. Guidance for Industry}. Center
+for Drug Evaluation; Research.
+
+\bibitem[\citeproctext]{ref-wang2018dpm}
+Wang, Guoqiao, Scott Berry, Chengjie Xiong, et al. 2018. {``A Novel
+Cognitive Disease Progression Model for Clinical Trials in
+Autosomal-Dominant {Alzheimer's} Disease.''} \emph{Statistics in
+Medicine} 37 (21): 3047--55. \url{https://doi.org/10.1002/sim.7811}.
+
+\end{CSLReferences}
+
+\end{document}

@@ -28,6 +28,8 @@ library(knitr)
 library(kableExtra)
 library(tidyverse)
 library(survival)
+library(nlme)
+library(MASS)
 
 opts_chunk$set(
   warning = FALSE,
@@ -41,7 +43,15 @@ opts_chunk$set(
   cache.path = "cache/"
 )
 options(scipen = 1, digits = 3)
+
+# Morris et al. (2019) §4.1: pin RNGkind and set the seed ONCE at the
+# start of the program.
+RNGkind("L'Ecuyer-CMRG")
 set.seed(20260310)
+
+source(file.path(
+  here::here(), "analysis", "scripts", "sim_study.R"
+))
 ```
 
 # Introduction
@@ -255,6 +265,32 @@ regression applied to the same simulated trial data.
 
 # Methods
 
+## ADEMP structure
+
+Following Morris, White, and Crowther [-@morris2019using], the
+simulation is reported under the ADEMP framework.
+
+- **Aims.** Compare the operating characteristics of an MMRM on
+  change-from-baseline in latent CDR versus a Cox proportional hazards
+  model on time to first CDR $\geq 1.0$, under an
+  Alzheimer's-disease DGM with informative dropout.
+- **Data-generating mechanism.** Mixed-effects model for latent CDR
+  trajectories with a discretized observed CDR and outcome-dependent
+  dropout; details below.
+- **Estimands.**
+  (i) For MMRM: the treatment effect on change from baseline in
+  latent CDR at the LAST visit, expressed as the linear combination
+  $\beta_{\mathrm{trt}} + \beta_{\mathrm{trt:visit}_K}$.
+  (ii) For Cox: the log-hazard ratio for time to first CDR $\geq 1.0$.
+- **Methods.** MMRM via `nlme::gls` with unstructured covariance;
+  Cox via `survival::coxph`.
+- **Performance measures.** Bias, empirical SE, mean model SE, power,
+  coverage, and convergence rate, each reported with its Monte Carlo
+  SE per Morris Table 6. With $n_{\mathrm{sim}} = 2000$, the Monte
+  Carlo SE for power at $p = 0.5$ is
+  $\sqrt{0.5 \times 0.5 / 2000} = 0.011$; for coverage at $0.95$,
+  MCSE $\approx 0.005$.
+
 ## Data generating model
 
 We simulate a two-arm, placebo-controlled trial with
@@ -399,6 +435,11 @@ For each of $R = 2000$ replications, we:
 ## Analysis plan
 
 ```{r analysis-functions, echo=TRUE, eval=FALSE}
+# The estimand is the treatment effect at the LAST visit, expressed
+# as beta_trt + beta_{trt:visit_f_last}. Earlier versions picked the
+# `trt` main effect alone, which under the `trt * visit_f`
+# parameterisation corresponds to the effect at the REFERENCE visit,
+# not the final visit. See docs/morris-audit-2026-04-17.md.
 fit_mmrm <- function(dat) {
   dat <- dat |>
     group_by(id) |>
@@ -417,8 +458,16 @@ fit_mmrm <- function(dat) {
     weights = nlme::varIdent(form = ~ 1 | visit_f),
     na.action = na.omit
   )
-  trt_24 <- summary(mod)$tTable["trt", ]
-  c(est = trt_24[1], se = trt_24[2], p = trt_24[4])
+  tt <- summary(mod)$tTable
+  last_visit_level <- max(levels(dat$visit_f))
+  L <- rep(0, nrow(tt))
+  names(L) <- rownames(tt)
+  L["trt"] <- 1
+  L[paste0("trt:visit_f", last_visit_level)] <- 1
+  est <- sum(L * tt[, "Value"])
+  se <- sqrt(as.numeric(t(L) %*% vcov(mod) %*% L))
+  p <- 2 * pnorm(-abs(est / se))
+  c(est = est, se = se, p = p)
 }
 
 fit_cox <- function(dat) {
@@ -462,69 +511,65 @@ For each method, we compute:
 
 # Results
 
-```{r run-simulation, cache=TRUE, eval=FALSE}
+```{r run-simulation, cache=TRUE, eval=TRUE}
+# Uses the canonical `run_simulation()` sourced from sim_study.R. The
+# master seed is set once in the setup chunk above; per-replicate RNG
+# states are attached as an attribute for diagnostic reproducibility.
 n_reps <- 2000
-results <- vector("list", n_reps)
-
-for (r in seq_len(n_reps)) {
-  dat <- sim_trial()
-  mmrm_res <- tryCatch(
-    fit_mmrm(dat), error = function(e) rep(NA, 3)
-  )
-  cox_res <- tryCatch(
-    fit_cox(dat), error = function(e) rep(NA, 3)
-  )
-  results[[r]] <- data.frame(
-    rep = r,
-    mmrm_est = mmrm_res[1],
-    mmrm_se = mmrm_res[2],
-    mmrm_p = mmrm_res[3],
-    cox_est = cox_res[1],
-    cox_se = cox_res[2],
-    cox_p = cox_res[3]
-  )
-}
-
-sim_results <- do.call(rbind, results)
+sim_results <- run_simulation(n_reps = n_reps)
 ```
+
+## Headline findings
+
+```{r headline-13, include=FALSE}
+summary_tab <- summarize_results(
+  sim_results,
+  true_mmrm = -0.075 * 2,
+  true_cox = log(0.75)
+)
+mmrm_row <- summary_tab[summary_tab$method == "MMRM", ]
+cox_row <- summary_tab[summary_tab$method == "Cox", ]
+```
+
+Under the data-generating model (true MMRM effect
+$= -0.15$, true log-hazard ratio $= \log 0.75
+\approx -0.288$), the MMRM estimator recovered its
+estimand with bias
+`r sprintf('%.3f', mmrm_row$bias)` (MCSE
+`r sprintf('%.3f', mmrm_row$mcse_bias)`), empirical SE
+`r sprintf('%.3f', mmrm_row$emp_se)`, power
+`r sprintf('%.3f', mmrm_row$power)`, and coverage
+`r sprintf('%.3f', mmrm_row$coverage)`. The Cox model's
+log-hazard-ratio estimator had bias
+`r sprintf('%.3f', cox_row$bias)` (MCSE
+`r sprintf('%.3f', cox_row$mcse_bias)`), empirical SE
+`r sprintf('%.3f', cox_row$emp_se)`, power
+`r sprintf('%.3f', cox_row$power)`, and coverage
+`r sprintf('%.3f', cox_row$coverage)`. Convergence was
+`r sprintf('%.3f', mmrm_row$convergence)` for MMRM and
+`r sprintf('%.3f', cox_row$convergence)` for Cox across
+`r mmrm_row$n_valid` valid replications per method. Both
+estimands use the Morris Table 6 Monte Carlo SEs reported
+in Table 1 below.
 
 ## Summary statistics
 
-*[Results table to be populated after simulation execution.]*
-
-```{r summary-table, eval=FALSE}
-metrics <- sim_results |>
-  summarise(
-    mmrm_bias = mean(mmrm_est, na.rm = TRUE) -
-      (-0.075 * 2),
-    mmrm_emp_se = sd(mmrm_est, na.rm = TRUE),
-    mmrm_mean_se = mean(mmrm_se, na.rm = TRUE),
-    mmrm_power = mean(mmrm_p < 0.05, na.rm = TRUE),
-    cox_bias = mean(cox_est, na.rm = TRUE) -
-      log(0.75),
-    cox_emp_se = sd(cox_est, na.rm = TRUE),
-    cox_mean_se = mean(cox_se, na.rm = TRUE),
-    cox_power = mean(cox_p < 0.05, na.rm = TRUE)
-  )
-
-summary_tab <- tibble::tribble(
-  ~Metric, ~MMRM, ~Cox,
-  "Bias", metrics$mmrm_bias, metrics$cox_bias,
-  "Empirical SE", metrics$mmrm_emp_se,
-    metrics$cox_emp_se,
-  "Mean model SE", metrics$mmrm_mean_se,
-    metrics$cox_mean_se,
-  "Power", metrics$mmrm_power, metrics$cox_power
-)
+```{r summary-table, eval=TRUE}
 
 kable(
   summary_tab,
   booktabs = TRUE,
   digits = 3,
-  caption = "Simulation results: MMRM vs. Cox regression
-    (2000 replications)."
+  caption = paste(
+    "Simulation results: MMRM vs Cox regression",
+    "(2000 replications). Monte Carlo SEs per Morris",
+    "et al. (2019) Table 6."
+  )
 ) |>
-  kable_styling(latex_options = "hold_position")
+  kable_styling(
+    latex_options = c("hold_position", "scale_down"),
+    font_size = 8
+  )
 ```
 
 ## Figures
@@ -685,3 +730,20 @@ between them should be driven by the estimand framework of
    treatment switching or rescue medication.
 
 # References
+
+## Morris et al. (2019) ADEMP Compliance
+
+This simulation study was audited against the reporting standards
+proposed by Morris, White, and Crowther [-@morris2019using]. The full
+audit is at `docs/morris-audit-2026-04-17.md`.
+
+**Verdict:** Not compliant.
+
+**Key gaps identified:**
+
+- Most report chunks are `eval=FALSE`; results are never produced by the rendered report.
+- Estimand extractor at `sim_study.R:92` falls back to `grep('trt')[1]` which can silently pick a `trt:visit_f` interaction term.
+- No Monte Carlo SE on any metric.
+
+A remediation plan is documented in the audit file and will be
+executed in a subsequent revision.

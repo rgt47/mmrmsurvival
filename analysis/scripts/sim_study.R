@@ -88,16 +88,35 @@ fit_mmrm <- function(dat) {
 
   if (is.null(mod)) return(c(est = NA, se = NA, p = NA))
 
+  # Estimand: treatment effect at the LAST visit, expressed as the
+  # linear combination beta_trt + beta_{trt:visit_f_last}. The previous
+  # implementation picked `trt` alone, which under the trt * visit_f
+  # parameterisation corresponds to the treatment effect at the
+  # REFERENCE visit, not the last visit. That mismatched the
+  # reported true value (-0.15, i.e. beta[4] * (2.5 - 0.5) = -0.15).
   tt <- summary(mod)$tTable
-  row_nm <- grep("^trt$", rownames(tt), value = TRUE)
-  if (length(row_nm) == 0) {
-    row_nm <- grep("trt", rownames(tt), value = TRUE)[1]
+  coef_names <- rownames(tt)
+  last_visit_level <- max(levels(dat$visit_f))
+  trt_main <- "trt"
+  trt_int <- paste0("trt:visit_f", last_visit_level)
+
+  if (!(trt_main %in% coef_names) ||
+      !(trt_int %in% coef_names)) {
+    return(c(est = NA, se = NA, p = NA))
   }
-  c(
-    est = tt[row_nm, "Value"],
-    se = tt[row_nm, "Std.Error"],
-    p = tt[row_nm, "p-value"]
-  )
+
+  L <- rep(0, length(coef_names))
+  names(L) <- coef_names
+  L[trt_main] <- 1
+  L[trt_int] <- 1
+
+  beta_hat <- tt[, "Value"]
+  vcov_mat <- vcov(mod)
+  est <- sum(L * beta_hat)
+  se <- sqrt(as.numeric(t(L) %*% vcov_mat %*% L))
+  z <- est / se
+  p <- 2 * stats::pnorm(-abs(z))
+  c(est = est, se = se, p = p)
 }
 
 fit_cox <- function(dat) {
@@ -121,20 +140,27 @@ fit_cox <- function(dat) {
   if (is.null(mod)) return(c(est = NA, se = NA, p = NA))
 
   s <- summary(mod)
+  # coef(mod) is a named numeric (name = "trt"), so bare c() would
+  # produce `est.trt`, `se.trt`, `p.trt`. Strip names before c() so
+  # downstream code can index by the simple names est/se/p.
   c(
-    est = coef(mod),
-    se = s$coefficients[, "se(coef)"],
-    p = s$coefficients[, "Pr(>|z|)"]
+    est = unname(coef(mod)),
+    se = unname(s$coefficients[, "se(coef)"]),
+    p = unname(s$coefficients[, "Pr(>|z|)"])
   )
 }
 
 run_simulation <- function(n_reps = 2000,
-                           n_per_arm = 200,
-                           seed = 20260310) {
-  set.seed(seed)
+                           n_per_arm = 200) {
+  # Morris et al. (2019) §4.1: the RNG seed is set ONCE by the caller;
+  # this function does NOT call `set.seed()`. Per-replicate RNG states
+  # are captured and attached as an attribute of the return value for
+  # diagnostic reproducibility of any failing rep.
   results <- vector("list", n_reps)
+  rng_states <- vector("list", n_reps)
 
   for (r in seq_len(n_reps)) {
+    rng_states[[r]] <- .Random.seed
     if (r %% 100 == 0) {
       message(sprintf("Replication %d / %d", r, n_reps))
     }
@@ -152,34 +178,99 @@ run_simulation <- function(n_reps = 2000,
       row.names = NULL
     )
   }
-  do.call(rbind, results)
+  out <- do.call(rbind, results)
+  attr(out, "rng_states") <- rng_states
+  out
 }
 
-if (!interactive()) {
-  message("Running simulation with 2000 replications...")
-  sim_results <- run_simulation(n_reps = 2000)
-  out_path <- file.path(
-    "analysis", "data", "sim_results.rds"
+summarize_results <- function(sim_results,
+                              true_mmrm = -0.075 * 2,
+                              true_cox = log(0.75),
+                              alpha = 0.05) {
+  # Monte Carlo SE formulas per Morris, White & Crowther (2019)
+  # Table 6. Degenerate cases (n < 1 or < 2) yield NA_real_.
+  safe_mean <- function(x) if (length(x) >= 1) mean(x) else NA_real_
+  safe_sd <- function(x) if (length(x) >= 2) stats::sd(x) else NA_real_
+  safe_div <- function(num, den) {
+    if (isTRUE(is.finite(num) && is.finite(den) && den > 0)) {
+      num / den
+    } else NA_real_
+  }
+
+  mmrm_valid <- !is.na(sim_results$mmrm_est)
+  cox_valid <- !is.na(sim_results$cox_est)
+  n_mmrm <- sum(mmrm_valid)
+  n_cox <- sum(cox_valid)
+
+  mmrm_est <- sim_results$mmrm_est[mmrm_valid]
+  cox_est <- sim_results$cox_est[cox_valid]
+
+  mmrm_cov <- (
+    sim_results$mmrm_est - 1.96 * sim_results$mmrm_se <= true_mmrm &
+      sim_results$mmrm_est + 1.96 * sim_results$mmrm_se >= true_mmrm
   )
-  saveRDS(sim_results, out_path)
-  message(sprintf("Results saved to %s", out_path))
+  cox_cov <- (
+    sim_results$cox_est - 1.96 * sim_results$cox_se <= true_cox &
+      sim_results$cox_est + 1.96 * sim_results$cox_se >= true_cox
+  )
 
-  true_mmrm <- -0.075 * 2
-  true_cox <- log(0.75)
-
-  metrics <- sim_results |>
-    summarise(
-      mmrm_bias = mean(mmrm_est, na.rm = TRUE) -
-        true_mmrm,
-      mmrm_emp_se = sd(mmrm_est, na.rm = TRUE),
-      mmrm_mean_se = mean(mmrm_se, na.rm = TRUE),
-      mmrm_power = mean(mmrm_p < 0.05, na.rm = TRUE),
-      mmrm_converged = mean(!is.na(mmrm_est)),
-      cox_bias = mean(cox_est, na.rm = TRUE) - true_cox,
-      cox_emp_se = sd(cox_est, na.rm = TRUE),
-      cox_mean_se = mean(cox_se, na.rm = TRUE),
-      cox_power = mean(cox_p < 0.05, na.rm = TRUE),
-      cox_converged = mean(!is.na(cox_est))
-    )
-  print(as.data.frame(metrics))
+  data.frame(
+    method = c("MMRM", "Cox"),
+    n_valid = c(n_mmrm, n_cox),
+    bias = c(
+      if (n_mmrm >= 1) safe_mean(mmrm_est) - true_mmrm else NA_real_,
+      if (n_cox >= 1) safe_mean(cox_est) - true_cox else NA_real_
+    ),
+    mcse_bias = c(
+      safe_div(safe_sd(mmrm_est), sqrt(n_mmrm)),
+      safe_div(safe_sd(cox_est), sqrt(n_cox))
+    ),
+    emp_se = c(safe_sd(mmrm_est), safe_sd(cox_est)),
+    mcse_emp_se = c(
+      safe_div(safe_sd(mmrm_est), sqrt(2 * (n_mmrm - 1))),
+      safe_div(safe_sd(cox_est), sqrt(2 * (n_cox - 1)))
+    ),
+    mean_se = c(
+      mean(sim_results$mmrm_se[mmrm_valid]),
+      mean(sim_results$cox_se[cox_valid])
+    ),
+    power = c(
+      mean(sim_results$mmrm_p[mmrm_valid] < alpha),
+      mean(sim_results$cox_p[cox_valid] < alpha)
+    ),
+    mcse_power = c(
+      sqrt(
+        mean(sim_results$mmrm_p[mmrm_valid] < alpha) *
+          (1 - mean(sim_results$mmrm_p[mmrm_valid] < alpha)) /
+          n_mmrm
+      ),
+      sqrt(
+        mean(sim_results$cox_p[cox_valid] < alpha) *
+          (1 - mean(sim_results$cox_p[cox_valid] < alpha)) /
+          n_cox
+      )
+    ),
+    coverage = c(
+      mean(mmrm_cov, na.rm = TRUE),
+      mean(cox_cov, na.rm = TRUE)
+    ),
+    mcse_coverage = c(
+      sqrt(
+        mean(mmrm_cov, na.rm = TRUE) *
+          (1 - mean(mmrm_cov, na.rm = TRUE)) / n_mmrm
+      ),
+      sqrt(
+        mean(cox_cov, na.rm = TRUE) *
+          (1 - mean(cox_cov, na.rm = TRUE)) / n_cox
+      )
+    ),
+    convergence = c(n_mmrm / nrow(sim_results),
+                    n_cox / nrow(sim_results))
+  )
 }
+
+# The driver block that previously auto-ran 2000 replications when
+# sourced non-interactively was moved to `analysis/scripts/01_run_simulation.R`.
+# Sourcing this file now only defines the functions; it does not run
+# the simulation. This prevents an accidental 2000-rep run when the
+# report sources `sim_study.R` from its setup chunk.

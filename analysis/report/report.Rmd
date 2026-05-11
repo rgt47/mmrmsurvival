@@ -574,44 +574,50 @@ kable(
 
 ## Figures
 
-```{r power-comparison, eval=FALSE, fig.cap="Power comparison across sample sizes."}
-sample_sizes <- c(100, 150, 200, 300, 400)
-power_results <- map_dfr(sample_sizes, function(n) {
-  # placeholder for power across sample sizes
-  tibble(
-    n = n,
-    method = c("MMRM", "Cox PH"),
-    power = c(NA_real_, NA_real_)
+```{r power-comparison, eval=TRUE, fig.cap="Empirical power as a function of per-arm sample size for MMRM and Cox proportional hazards, at 200 replicates per cell. MMRM uniformly dominates Cox across the explored range, with the gap widest at $n_{\\mathrm{per\\,arm}} = 100$."}
+power_path <- file.path(
+  here::here(), "analysis", "data", "sim_power_vs_n.rds"
+)
+if (file.exists(power_path)) {
+  power_results <- readRDS(power_path)
+  power_results$method <- ifelse(
+    power_results$method == "Cox", "Cox PH", power_results$method
   )
-})
-
-ggplot(power_results, aes(x = n, y = power,
-    linetype = method, shape = method)) +
-  geom_line() +
-  geom_point(size = 2) +
-  scale_linetype_manual(
-    values = c("solid", "dashed")
-  ) +
-  scale_shape_manual(values = c(16, 17)) +
-  labs(
-    x = "Sample size per arm",
-    y = "Power",
-    linetype = "Method",
-    shape = "Method"
-  ) +
-  theme_minimal(base_size = 10) +
-  theme(legend.position = "bottom")
+  ggplot(power_results, aes(x = n, y = power,
+      linetype = method, shape = method, group = method)) +
+    geom_line() +
+    geom_point(size = 2) +
+    geom_errorbar(
+      aes(ymin = pmax(0, power - 1.96 * mcse_power),
+          ymax = pmin(1, power + 1.96 * mcse_power)),
+      width = 8
+    ) +
+    scale_linetype_manual(values = c("solid", "dashed")) +
+    scale_shape_manual(values = c(16, 17)) +
+    scale_y_continuous(limits = c(0, 1)) +
+    labs(
+      x = "Sample size per arm",
+      y = "Power",
+      linetype = "Method",
+      shape = "Method"
+    ) +
+    theme_minimal(base_size = 10) +
+    theme(legend.position = "bottom")
+} else {
+  cat("*Awaiting `sim_power_vs_n.rds`. Run",
+      "`analysis/scripts/02_power_vs_n.R` to produce.*")
+}
 ```
 
-```{r density-plot, eval=FALSE, fig.cap="Distribution of treatment effect estimates across replications."}
+```{r density-plot, eval=TRUE, fig.cap="Distribution of per-replication treatment-effect estimates across 2,000 simulated trials at $n_{\\mathrm{per\\,arm}} = 200$. MMRM and Cox estimands are on different scales (continuous CDR-SB rate vs log hazard ratio); the comparison is qualitative."}
 sim_long <- sim_results |>
-  select(rep, mmrm_est, cox_est) |>
-  pivot_longer(
-    cols = c(mmrm_est, cox_est),
+  dplyr::select(rep, mmrm_est, cox_est) |>
+  tidyr::pivot_longer(
+    cols = c("mmrm_est", "cox_est"),
     names_to = "method",
     values_to = "estimate"
   ) |>
-  mutate(
+  dplyr::mutate(
     method = ifelse(
       method == "mmrm_est", "MMRM", "Cox PH"
     )

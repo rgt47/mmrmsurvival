@@ -148,14 +148,15 @@
 \urlstyle{same}
 \hypersetup{
   pdftitle={MMRM vs.~Survival Analysis for AD Clinical Trials: A Historical Review and Simulation Study},
-  pdfauthor={R.G. Thomas},
+  pdfauthor={Ronald G. Thomas, Ph.D.},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 
 \title{MMRM vs.~Survival Analysis for AD Clinical Trials: A Historical
 Review and Simulation Study}
-\author{R.G. Thomas}
-\date{April 19, 2026}
+\author{Ronald G. Thomas,
+Ph.D.\thanks{Wertheim School of Public Health, UCSD; ORCID: 0000-0003-1686-4965}}
+\date{May 11, 2026}
 
 \begin{document}
 \maketitle
@@ -645,6 +646,18 @@ For each method, we compute:
 
 \section{Results}\label{results}
 
+\subsection{Headline findings}\label{headline-findings}
+
+Under the data-generating model (true MMRM effect \(= -0.15\), true
+log-hazard ratio \(= \log 0.75
+\approx -0.288\)), the MMRM estimator recovered its estimand with bias
+-0.003 (MCSE 0.001), empirical SE 0.034, power 0.994, and coverage
+0.954. The Cox model's log-hazard-ratio estimator had bias -0.002 (MCSE
+0.002), empirical SE 0.110, power 0.716, and coverage 0.961. Convergence
+was 1.000 for MMRM and 1.000 for Cox across 2000 valid replications per
+method. Both estimands use the Morris Table 6 Monte Carlo SEs reported
+in Table 1 below.
+
 \subsection{Summary statistics}\label{summary-statistics}
 
 \begin{table}[!h]
@@ -664,6 +677,24 @@ Cox & 2000 & -0.002 & 0.002 & 0.110 & 0.002 & 0.116 & 0.716 & 0.010 & 0.961 & 0.
 \end{table}
 
 \subsection{Figures}\label{figures}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={Empirical power as a function of per-arm sample size for MMRM and Cox proportional hazards, at 200 replicates per cell. MMRM uniformly dominates Cox across the explored range, with the gap widest at n\_\{\textbackslash mathrm\{per\textbackslash,arm\}\} = 100.}]{report_files/report_files/figure-latex/power-comparison-1.pdf}}
+\caption{Empirical power as a function of per-arm sample size for MMRM
+and Cox proportional hazards, at 200 replicates per cell. MMRM uniformly
+dominates Cox across the explored range, with the gap widest at
+\(n_{\mathrm{per\,arm}} = 100\).}
+\end{figure}
+
+\begin{figure}
+\centering
+\pandocbounded{\includegraphics[keepaspectratio,alt={Distribution of per-replication treatment-effect estimates across 2,000 simulated trials at n\_\{\textbackslash mathrm\{per\textbackslash,arm\}\} = 200. MMRM and Cox estimands are on different scales (continuous CDR-SB rate vs log hazard ratio); the comparison is qualitative.}]{report_files/report_files/figure-latex/density-plot-1.pdf}}
+\caption{Distribution of per-replication treatment-effect estimates
+across 2,000 simulated trials at \(n_{\mathrm{per\,arm}} = 200\). MMRM
+and Cox estimands are on different scales (continuous CDR-SB rate vs log
+hazard ratio); the comparison is qualitative.}
+\end{figure}
 
 \section{Discussion}\label{discussion}
 
@@ -788,6 +819,14 @@ audit is at \texttt{docs/morris-audit-2026-04-17.md}.
 
 A remediation plan is documented in the audit file and will be executed
 in a subsequent revision.
+
+\vfill
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\emph{Rendered on 2026-05-11 at 09:41 PDT.}\\
+\emph{Source:
+\texttt{\textasciitilde{}/prj/res/13-mmrm-vs-survival-ad/mmrmsurvival/analysis/report/report.Rmd}}
 
 \protect\phantomsection\label{refs}
 \begin{CSLReferences}{0}{1}

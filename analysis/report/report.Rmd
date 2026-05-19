@@ -665,13 +665,13 @@ single continuous severity measure plays the role that
 ADAS-Cog or CDR-SB plays in AD
 [@fleming1996surrogate; @fda2018oncology].
 
-The simulation results are expected to confirm the
-theoretical predictions from the literature: MMRM should
-yield substantially greater power than Cox regression when
-both are applied to CDR data from the same simulated
-trial, because the continuous analysis uses information
-from the full trajectory of scores at every visit, whereas
-the survival analysis reduces this trajectory to a single
+We expect the simulation results to confirm the theoretical
+predictions from the literature: MMRM should yield
+substantially greater power than Cox regression when both
+are applied to CDR data from the same simulated trial,
+because the continuous analysis uses information from the
+full trajectory of scores at every visit, whereas the
+survival analysis reduces this trajectory to a single
 binary event. The power advantage should be most pronounced
 in the MCI-to-mild-dementia transition modeled here, where
 conversion rates are modest and many participants in a
@@ -746,20 +746,24 @@ between them should be driven by the estimand framework of
 
 ## Morris et al. (2019) ADEMP Compliance
 
-This simulation study was audited against the reporting standards
-proposed by Morris, White, and Crowther [-@morris2019using]. The full
-audit is at `docs/morris-audit-2026-04-17.md`.
+We audited this simulation study against the reporting
+standards proposed by Morris, White, and Crowther
+[-@morris2019using]. The full audit is recorded at
+`docs/morris-audit-2026-04-17.md`.
 
 **Verdict:** Not compliant.
 
 **Key gaps identified:**
 
-- Most report chunks are `eval=FALSE`; results are never produced by the rendered report.
-- Estimand extractor at `sim_study.R:92` falls back to `grep('trt')[1]` which can silently pick a `trt:visit_f` interaction term.
+- Most report chunks are `eval=FALSE`; results are never
+  produced by the rendered report.
+- Estimand extractor at `sim_study.R:92` falls back to
+  `grep('trt')[1]`, which can silently pick a
+  `trt:visit_f` interaction term.
 - No Monte Carlo SE on any metric.
 
-A remediation plan is documented in the audit file and will be
-executed in a subsequent revision.
+A remediation plan is recorded in the audit file and will
+be taken up in a subsequent revision.
 
 
 ```{r footer, echo=FALSE, results='asis'}

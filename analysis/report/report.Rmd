@@ -81,9 +81,9 @@ reflects fundamental differences in disease biology,
 regulatory philosophy, and the statistical properties of
 the available endpoints.
 
-This manuscript traces the historical developments that led
+We trace the historical developments that led
 to the current analytic conventions in each field and
-presents a simulation study comparing MMRM and survival
+present a simulation study comparing MMRM and survival
 analysis applied to the same underlying disease process,
 using the Clinical Dementia Rating (CDR) scale as the
 primary measure.
@@ -129,9 +129,9 @@ proceeds as if no data were missing. This approach was
 computationally convenient and widely accepted by
 regulators, but it rests on the untenable assumption that
 a participant's trajectory would have remained flat from
-the time of dropout---an assumption grossly violated in
+the time of dropout (an assumption grossly violated in
 progressive diseases where dropout is often driven by
-worsening symptoms.
+worsening symptoms).
 
 The foundational work of @mallinckrodt2001dropout and
 @mallinckrodt2001typei demonstrated through simulation
@@ -171,8 +171,8 @@ likelihood-based and multiple imputation approaches as
 preferred alternatives [@nrc2010missing]. The ICH E9(R1)
 addendum on estimands further clarified the conceptual
 framework by requiring explicit specification of the
-target estimand---including how intercurrent events such
-as treatment discontinuation are handled---before
+target estimand (including how intercurrent events such
+as treatment discontinuation are handled) before
 selecting an analytic method [@ich2019e9r1].
 
 ## MMRM as the primary analysis in AD
@@ -264,7 +264,7 @@ systematically examined in a simulation that uses the
 global CDR as both a continuous outcome and the basis for
 a survival endpoint defined by conversion from CDR 0.5
 (MCI/very mild dementia) to CDR 1.0 or higher (mild
-dementia). The present study addresses this gap through a
+dementia). We address this gap through a
 Monte Carlo simulation that generates realistic CDR
 trajectories under a plausible data-generating model and
 compares the statistical properties of MMRM and Cox

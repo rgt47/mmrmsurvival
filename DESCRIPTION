@@ -2,13 +2,24 @@ Package: mmrmsurvival
 Title: MMRM vs Survival Analysis in Alzheimer Disease Trials
 Version: 0.0.0.9000
 Authors@R:
-    person("Ronald G.", "Thomas", email = "rthomas@ucsd.edu", role = c("aut", "cre"))
+    person("Ronald G.", "Thomas", email = "rgthomas@ucsd.edu", role = c("aut", "cre"))
 Description: Comparison of MMRM and survival analysis approaches for Alzheimer disease clinical trials.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.0
-Imports:
-    renv
 Suggests:
+    dplyr,
+    here,
+    kableExtra,
+    knitr,
+    MASS,
+    nlme,
+    purrr,
+    rmarkdown,
+    rprojroot,
+    survival,
+    tibble,
+    tidyr,
+    tidyverse,
     tinytest

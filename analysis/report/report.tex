@@ -5,7 +5,7 @@
   11pt,
 ]{article}
 \usepackage{xcolor}
-\usepackage[left=3cm,right=5cm,top=2cm,bottom=2cm]{geometry}
+\usepackage[left=3cm,right=3cm,top=2.5cm,bottom=2.5cm]{geometry}
 \usepackage{amsmath,amssymb}
 \setcounter{secnumdepth}{5}
 \usepackage{iftex}
@@ -28,6 +28,7 @@
   \usepackage[]{microtype}
   \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
+\usepackage{setspace}
 \makeatletter
 \@ifundefined{KOMAClassName}{% if non-KOMA class
   \IfFileExists{parskip.sty}{%
@@ -78,6 +79,19 @@
 \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
 \newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{caption}
+\captionsetup[table]{skip=6pt}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
 \usepackage{graphicx}
 \makeatletter
 \newsavebox\pandoc@box
@@ -129,6 +143,51 @@
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+%% tools/stamp.tex
+%% Provenance footer for PDFs rendered from this project.
+%% Vendored by zzcollab; this file is not project-specific. The
+%% footer prints the source document and the time of rendering.
+%% The git version is defined here too, and so is available to a
+%% project that wants it on the page, but it is left off the
+%% default footer: it already names the staged copy in share/ and
+%% appears in its manifest row. All values are supplied at render
+%% time by tools/stamp-render.R, which writes a small generated
+%% file that redefines the macros below. The \providecommand
+%% defaults keep a bare LaTeX compile working when the document is
+%% built without the wrapper.
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\providecommand{\stampsource}{\detokenize{(source not recorded)}}
+\providecommand{\stamptime}{(time not recorded)}
+\providecommand{\stampversion}{\detokenize{(version not recorded)}}
+\setlength{\footskip}{40pt}
+\newcommand{\stampfootcontent}{%
+  \footnotesize\color{gray}%
+  \parbox[b]{\textwidth}{%
+    \stamptime\hfill\thepage\\[2pt]%
+    \ttfamily\raggedright\stampsource}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\stampfootcontent}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.4pt}
+%% The title page uses the `plain` page style; redefine it so the
+%% stamp appears there too.
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\stampfootcontent}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0.4pt}}
+\renewcommand{\stampsource}{\textasciitilde{}/\allowbreak{}prj/\allowbreak{}res/\allowbreak{}13-mmrm-vs-survival-ad/\allowbreak{}mmrmsurvival/\allowbreak{}analysis/\allowbreak{}report/\allowbreak{}report.Rmd}
+\renewcommand{\stamptime}{2026-08-15 16:38 PDT}
+\renewcommand{\stampversion}{\detokenize{4b5c7a8}}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage[mathlines]{lineno}
+\linenumbers
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -146,17 +205,19 @@
 \usepackage{bookmark}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
+% fallback for those not using the hyperref driver hyperxmp:
+\makeatletter
+\@ifundefined{xmpquote}{\newcommand{\xmpquote}[1]{#1}}{}
+\makeatother
 \hypersetup{
   pdftitle={MMRM vs.~Survival Analysis for AD Clinical Trials: A Historical Review and Simulation Study},
   pdfauthor={Ronald G. Thomas, Ph.D.},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 
-\title{MMRM vs.~Survival Analysis for AD Clinical Trials: A Historical
-Review and Simulation Study}
-\author{Ronald G. Thomas,
-Ph.D.\thanks{Wertheim School of Public Health, UCSD; ORCID: 0000-0003-1686-4965}}
-\date{May 11, 2026}
+\title{MMRM vs.~Survival Analysis for AD Clinical Trials: A Historical Review and Simulation Study}
+\author{Ronald G. Thomas, Ph.D.\thanks{Wertheim School of Public Health, UCSD; ORCID: 0000-0003-1686-4965}}
+\date{August 15, 2026}
 
 \begin{document}
 \maketitle
@@ -165,212 +226,216 @@ Ph.D.\thanks{Wertheim School of Public Health, UCSD; ORCID: 0000-0003-1686-4965}
 \setcounter{tocdepth}{2}
 \tableofcontents
 }
+\setstretch{1.1}
 \section{Introduction}\label{introduction}
 
-\subsection{The divergent paths of clinical trial
-analysis}\label{the-divergent-paths-of-clinical-trial-analysis}
+\subsection{The divergent paths of clinical trial analysis}\label{the-divergent-paths-of-clinical-trial-analysis}
 
-The statistical analysis of clinical trials has followed markedly
-different trajectories across therapeutic areas. In oncology,
-time-to-event endpoints analyzed by survival methods remain the
-regulatory gold standard, with overall survival serving as the
-definitive measure of treatment
-efficacy\textsuperscript{\citeproc{ref-fda2018oncology}{1},\citeproc{ref-fleming1996surrogate}{2}}.
-In contrast, Alzheimer's disease (AD) and other neurodegenerative
-disease trials have converged on change-from-baseline estimands analyzed
-by the mixed model for repeated measures (MMRM) as the primary analytic
+The statistical analysis of clinical trials has followed
+markedly different trajectories across therapeutic areas.
+In oncology, time-to-event endpoints analyzed by survival
+methods remain the regulatory gold standard, with overall
+survival serving as the definitive measure of treatment
+efficacy\textsuperscript{\citeproc{ref-fda2018oncology}{1},\citeproc{ref-fleming1996surrogate}{2}}. In
+contrast, Alzheimer's disease (AD) and other
+neurodegenerative disease trials have converged on
+change-from-baseline estimands analyzed by the mixed model
+for repeated measures (MMRM) as the primary analytic
 framework\textsuperscript{\citeproc{ref-donohue2012mmrm}{3},\citeproc{ref-mallinckrodt2003assessing}{4}}.
-This divergence is not an accident of history but rather reflects
-fundamental differences in disease biology, regulatory philosophy, and
-the statistical properties of the available endpoints.
+This divergence is not an accident of history but rather
+reflects fundamental differences in disease biology,
+regulatory philosophy, and the statistical properties of
+the available endpoints.
 
-This manuscript traces the historical developments that led to the
-current analytic conventions in each field and presents a simulation
-study comparing MMRM and survival analysis applied to the same
-underlying disease process, using the Clinical Dementia Rating (CDR)
-scale as the primary measure.
+We trace the historical developments that led
+to the current analytic conventions in each field and
+present a simulation study comparing MMRM and survival
+analysis applied to the same underlying disease process,
+using the Clinical Dementia Rating (CDR) scale as the
+primary measure.
 
-\subsection{Regulatory origins: the FDA dual-outcome
-requirement}\label{regulatory-origins-the-fda-dual-outcome-requirement}
+\subsection{Regulatory origins: the FDA dual-outcome requirement}\label{regulatory-origins-the-fda-dual-outcome-requirement}
 
-The regulatory framework for AD clinical trials was shaped decisively by
-the 1990 FDA guidelines authored by Paul Leber, which required
-demonstration of efficacy on two co-primary endpoints: one cognitive
-(such as the Alzheimer's Disease Assessment Scale-Cognitive Subscale,
-ADAS-Cog) and one global or functional
-measure\textsuperscript{\citeproc{ref-leber1990guidelines}{5},\citeproc{ref-rosen1984adas}{6}}.
-The rationale was that a statistically significant difference on a
-psychometric test alone might not reflect clinically meaningful change;
-a second, independent measure of global function was needed to confirm
-relevance. This dual-outcome requirement established the precedent that
-AD trials would be evaluated on the magnitude and direction of change
-from baseline, rather than on the occurrence of discrete clinical
+The regulatory framework for AD clinical trials was shaped
+decisively by the 1990 FDA guidelines authored by Paul
+Leber, which required demonstration of efficacy on two
+co-primary endpoints: one cognitive (such as the
+Alzheimer's Disease Assessment Scale-Cognitive Subscale,
+ADAS-Cog) and one global or functional measure\textsuperscript{\citeproc{ref-leber1990guidelines}{5},\citeproc{ref-rosen1984adas}{6}}. The rationale was
+that a statistically significant difference on a
+psychometric test alone might not reflect clinically
+meaningful change; a second, independent measure of global
+function was needed to confirm relevance. This dual-outcome
+requirement established the precedent that AD trials would
+be evaluated on the magnitude and direction of change from
+baseline, rather than on the occurrence of discrete clinical
 events.
 
-The ADAS-Cog, developed
-by\textsuperscript{\citeproc{ref-rosen1984adas}{6}}, and the CDR,
-codified by\textsuperscript{\citeproc{ref-morris1993cdr}{7}}, became the
-two pillars of AD trial assessment. The CDR in particular provided both
-a global staging instrument (the global CDR score, ranging from 0 to 3)
-and a sum-of-boxes score (CDR-SB, ranging from 0 to 18) that offered a
-quasi-continuous measure of disease severity suitable for change-score
-analysis. The 2018 FDA guidance on early AD further reinforced the
-change-from-baseline paradigm, while allowing greater flexibility in
-endpoint selection for earlier disease
+The ADAS-Cog, developed by\textsuperscript{\citeproc{ref-rosen1984adas}{6}}, and the CDR,
+codified by\textsuperscript{\citeproc{ref-morris1993cdr}{7}}, became the two pillars of AD
+trial assessment. The CDR in particular provided both a
+global staging instrument (the global CDR score, ranging
+from 0 to 3) and a sum-of-boxes score (CDR-SB, ranging
+from 0 to 18) that offered a quasi-continuous measure of
+disease severity suitable for change-score analysis. The
+2018 FDA guidance on early AD further reinforced the
+change-from-baseline paradigm, while allowing greater
+flexibility in endpoint selection for earlier disease
 stages\textsuperscript{\citeproc{ref-fda2018earlyad}{8}}.
 
-\subsection{The fall of LOCF and the rise of
-MMRM}\label{the-fall-of-locf-and-the-rise-of-mmrm}
+\subsection{The fall of LOCF and the rise of MMRM}\label{the-fall-of-locf-and-the-rise-of-mmrm}
 
-Through the 1990s, the standard analytic approach for AD trials was last
-observation carried forward (LOCF) combined with analysis of covariance
-(ANCOVA) at the final time point. Under LOCF, a participant's last
-observed value is imputed for all subsequent missing visits, and the
-analysis proceeds as if no data were missing. This approach was
-computationally convenient and widely accepted by regulators, but it
-rests on the untenable assumption that a participant's trajectory would
-have remained flat from the time of dropout---an assumption grossly
-violated in progressive diseases where dropout is often driven by
-worsening symptoms.
+Through the 1990s, the standard analytic approach for AD
+trials was last observation carried forward (LOCF) combined
+with analysis of covariance (ANCOVA) at the final time
+point. Under LOCF, a participant's last observed value is
+imputed for all subsequent missing visits, and the analysis
+proceeds as if no data were missing. This approach was
+computationally convenient and widely accepted by
+regulators, but it rests on the untenable assumption that
+a participant's trajectory would have remained flat from
+the time of dropout (an assumption grossly violated in
+progressive diseases where dropout is often driven by
+worsening symptoms).
 
-The foundational work
-of\textsuperscript{\citeproc{ref-mallinckrodt2001dropout}{9}}
-and\textsuperscript{\citeproc{ref-mallinckrodt2001typei}{10}}
-demonstrated through simulation that LOCF produces substantially biased
-treatment effect estimates and inflated Type I error rates when dropout
-is differential between treatment arms. In a progressive disease like
-AD, where placebo-arm participants tend to drop out at higher rates due
-to worsening, LOCF paradoxically imputes favorable values for the
-placebo group (freezing them at an earlier, less impaired state),
-thereby attenuating the estimated treatment effect. Conversely, if
-active-treatment participants drop out due to adverse events while still
-relatively well, LOCF preserves their favorable scores, inflating the
-apparent benefit.
+The foundational work of\textsuperscript{\citeproc{ref-mallinckrodt2001dropout}{9}} and\textsuperscript{\citeproc{ref-mallinckrodt2001typei}{10}} demonstrated through simulation
+that LOCF produces substantially biased treatment effect
+estimates and inflated Type I error rates when dropout is
+differential between treatment arms. In a progressive
+disease like AD, where placebo-arm participants tend to
+drop out at higher rates due to worsening, LOCF
+paradoxically imputes favorable values for the placebo
+group (freezing them at an earlier, less impaired state),
+thereby attenuating the estimated treatment effect.
+Conversely, if active-treatment participants drop out due
+to adverse events while still relatively well, LOCF
+preserves their favorable scores, inflating the apparent
+benefit.
 
-\textsuperscript{\citeproc{ref-mallinckrodt2003assessing}{4}}
-and\textsuperscript{\citeproc{ref-mallinckrodt2003response}{11}}
-extended this work by comparing LOCF to the mixed model for repeated
-measures (MMRM), which uses all observed data under a likelihood-based
-framework that is valid when data are missing at random (MAR). Unlike
-LOCF, MMRM does not impute missing values; instead, it borrows
-information from the observed correlation structure across time points
-to provide unbiased estimates under
-MAR.\textsuperscript{\citeproc{ref-obrien2005semiparametric}{12}}
-proposed alternative semi-parametric and non-parametric methods and
-found that MMRM performed comparably to their proposed approaches while
-making less restrictive
-assumptions.\textsuperscript{\citeproc{ref-molenberghs2004analyzing}{13}}
-provided the theoretical underpinning for likelihood-based analyses of
+\textsuperscript{\citeproc{ref-mallinckrodt2003assessing}{4}} and\textsuperscript{\citeproc{ref-mallinckrodt2003response}{11}}
+extended this work by comparing LOCF to the mixed model
+for repeated measures (MMRM), which uses all observed data
+under a likelihood-based framework that is valid when data
+are missing at random (MAR). Unlike LOCF, MMRM does not
+impute missing values; instead, it borrows information
+from the observed correlation structure across time points
+to provide unbiased estimates under MAR.\textsuperscript{\citeproc{ref-obrien2005semiparametric}{12}}
+proposed alternative semi-parametric and non-parametric
+methods and found that MMRM performed comparably to their
+proposed approaches while making less restrictive
+assumptions.\textsuperscript{\citeproc{ref-molenberghs2004analyzing}{13}} provided the
+theoretical underpinning for likelihood-based analyses of
 incomplete longitudinal data.
 
-By the mid-2000s, the weight of evidence against LOCF was overwhelming,
-and the 2010 National Research Council panel report, commissioned by the
-FDA, formally recommended against single imputation methods and endorsed
-likelihood-based and multiple imputation approaches as preferred
-alternatives\textsuperscript{\citeproc{ref-nrc2010missing}{14}}. The ICH
-E9(R1) addendum on estimands further clarified the conceptual framework
-by requiring explicit specification of the target estimand---including
-how intercurrent events such as treatment discontinuation are
-handled---before selecting an analytic
-method\textsuperscript{\citeproc{ref-ich2019e9r1}{15}}.
+By the mid-2000s, the weight of evidence against LOCF was
+overwhelming, and the 2010 National Research Council panel
+report, commissioned by the FDA, formally recommended
+against single imputation methods and endorsed
+likelihood-based and multiple imputation approaches as
+preferred alternatives\textsuperscript{\citeproc{ref-nrc2010missing}{14}}. The ICH E9(R1)
+addendum on estimands further clarified the conceptual
+framework by requiring explicit specification of the
+target estimand (including how intercurrent events such
+as treatment discontinuation are handled) before
+selecting an analytic method\textsuperscript{\citeproc{ref-ich2019e9r1}{15}}.
 
-\subsection{MMRM as the primary analysis in
-AD}\label{mmrm-as-the-primary-analysis-in-ad}
+\subsection{MMRM as the primary analysis in AD}\label{mmrm-as-the-primary-analysis-in-ad}
 
-\textsuperscript{\citeproc{ref-donohue2012mmrm}{3}} compared MMRM, slope
-models, and quadratic models across five AD Cooperative Study (ADCS)
-trials and found that MMRM, which treats time as categorical and imposes
-no parametric assumptions on the mean trajectory, provided robust
-estimates across a range of disease stages and trial durations. Although
-continuous time (slope) models can be more statistically efficient when
-the linearity assumption holds, the unstructured mean of MMRM offers
-protection against model misspecification in a disease where
-trajectories are heterogeneous and potentially
-nonlinear.\textsuperscript{\citeproc{ref-wang2018dpm}{16}} proposed a
-disease progression model (DPM) with proportional treatment effects and
-demonstrated power gains over MMRM in autosomal dominant AD, though the
-DPM requires stronger parametric assumptions that may limit
-generalizability.
+\textsuperscript{\citeproc{ref-donohue2012mmrm}{3}} compared MMRM, slope models, and
+quadratic models across five AD Cooperative Study (ADCS)
+trials and found that MMRM, which treats time as
+categorical and imposes no parametric assumptions on the
+mean trajectory, provided robust estimates across a range
+of disease stages and trial durations. Although continuous
+time (slope) models can be more statistically efficient
+when the linearity assumption holds, the unstructured mean
+of MMRM offers protection against model misspecification
+in a disease where trajectories are heterogeneous and
+potentially nonlinear.\textsuperscript{\citeproc{ref-wang2018dpm}{16}} proposed a disease
+progression model (DPM) with proportional treatment effects
+and demonstrated power gains over MMRM in autosomal
+dominant AD, though the DPM requires stronger parametric
+assumptions that may limit generalizability.
 
-Today, virtually every pivotal AD trial uses MMRM or a close variant as
-the pre-specified primary analysis. The aducanumab EMERGE and ENGAGE
-trials\textsuperscript{\citeproc{ref-buddhaeberlein2022aducanumab}{17}}
-and the lecanemab Study
-201\textsuperscript{\citeproc{ref-dhadda2022lecanemab}{18}} all employed
-MMRM with change from baseline in CDR-SB as the primary endpoint, with
-sensitivity analyses from DPM and other longitudinal models used to
-assess robustness.
+Today, virtually every pivotal AD trial uses MMRM or a
+close variant as the pre-specified primary analysis. The
+aducanumab EMERGE and ENGAGE trials\textsuperscript{\citeproc{ref-buddhaeberlein2022aducanumab}{17}} and the lecanemab Study
+201\textsuperscript{\citeproc{ref-dhadda2022lecanemab}{18}} all employed MMRM with change
+from baseline in CDR-SB as the primary endpoint, with
+sensitivity analyses from DPM and other longitudinal
+models used to assess robustness.
 
-\subsection{Why survival analysis persists in
-oncology}\label{why-survival-analysis-persists-in-oncology}
+\subsection{Why survival analysis persists in oncology}\label{why-survival-analysis-persists-in-oncology}
 
-In oncology, the natural endpoint is death, and overall survival (OS)
-has served as the primary measure of treatment efficacy since the
-earliest cancer clinical trials. OS is binary, unambiguous, and
-universally
-meaningful.\textsuperscript{\citeproc{ref-fleming1996surrogate}{2}}
-cautioned against replacing OS with surrogate endpoints unless rigorous
-validation criteria are met, and the FDA has historically required OS
-data for full (as opposed to accelerated) approval of cancer
-drugs\textsuperscript{\citeproc{ref-fda2018oncology}{1}}. Even when
-progression-free survival or response rate serves as the primary
-endpoint for accelerated approval, confirmatory trials typically require
-OS data.
+In oncology, the natural endpoint is death, and overall
+survival (OS) has served as the primary measure of
+treatment efficacy since the earliest cancer clinical
+trials. OS is binary, unambiguous, and universally
+meaningful.\textsuperscript{\citeproc{ref-fleming1996surrogate}{2}} cautioned against
+replacing OS with surrogate endpoints unless rigorous
+validation criteria are met, and the FDA has historically
+required OS data for full (as opposed to accelerated)
+approval of cancer drugs\textsuperscript{\citeproc{ref-fda2018oncology}{1}}. Even when
+progression-free survival or response rate serves as the
+primary endpoint for accelerated approval, confirmatory
+trials typically require OS data.
 
-The persistence of survival analysis in oncology reflects several
-features that distinguish it from AD: (1) a clearly defined,
-irreversible event (death); (2) a well-understood proportional hazards
-framework with established regulatory precedent; (3) a tradition of
-interim analyses based on information fractions from event counts; and
-(4) the absence of a continuous, validated severity measure that changes
-monotonically and is universally accepted across tumor types.
+The persistence of survival analysis in oncology reflects
+several features that distinguish it from AD: (1) a clearly
+defined, irreversible event (death); (2) a well-understood
+proportional hazards framework with established regulatory
+precedent; (3) a tradition of interim analyses based on
+information fractions from event counts; and (4) the
+absence of a continuous, validated severity measure that
+changes monotonically and is universally accepted across
+tumor types.
 
-\subsection{Rate of change vs.~time to event in
-AD}\label{rate-of-change-vs.-time-to-event-in-ad}
+\subsection{Rate of change vs.~time to event in AD}\label{rate-of-change-vs.-time-to-event-in-ad}
 
-Given that CDR and similar scales can be used to define both change
-scores (amenable to MMRM) and threshold crossings (amenable to survival
-analysis), the question arises: what is the relative efficiency of these
-two approaches when applied to the same underlying data?
+Given that CDR and similar scales can be used to define
+both change scores (amenable to MMRM) and threshold
+crossings (amenable to survival analysis), the question
+arises: what is the relative efficiency of these two
+approaches when applied to the same underlying data?
 
-\textsuperscript{\citeproc{ref-donohue2011relative}{19}} derived an
-analytic inflation factor comparing Cox proportional hazards models of
-time to a threshold with linear models of continuous outcomes, and
-demonstrated through simulation that linear models consistently yielded
-greater statistical power for detecting treatment effects in ADNI
-data.\textsuperscript{\citeproc{ref-li2019relative}{20}} extended this
-work to presymptomatic AD, finding that power was approximately doubled
-with repeated continuous measures compared to time-to-progression
-analysis.\textsuperscript{\citeproc{ref-jonsson2024progression}{21}}
-introduced a progression model for repeated measures (PMRM) that
-expresses treatment effects in time units (days of delay) rather than
-CDR-SB points, offering a clinically interpretable alternative while
-maintaining efficiency comparable to
-MMRM.\textsuperscript{\citeproc{ref-ito2014predicting}{22}} modeled
-CDR-SB trajectories to predict time to clinically meaningful worsening
-in MCI patients, finding that the median time to a 1-point change was
-approximately 2 years---informing both trial duration and sample size
-planning.
+\textsuperscript{\citeproc{ref-donohue2011relative}{19}} derived an analytic inflation factor
+comparing Cox proportional hazards models of time to a
+threshold with linear models of continuous outcomes, and
+demonstrated through simulation that linear models
+consistently yielded greater statistical power for
+detecting treatment effects in ADNI data.\textsuperscript{\citeproc{ref-li2019relative}{20}}
+extended this work to presymptomatic AD, finding that
+power was approximately doubled with repeated continuous
+measures compared to time-to-progression analysis.\textsuperscript{\citeproc{ref-jonsson2024progression}{21}} introduced a progression model for
+repeated measures (PMRM) that expresses treatment effects
+in time units (days of delay) rather than CDR-SB points,
+offering a clinically interpretable alternative while
+maintaining efficiency comparable to MMRM.\textsuperscript{\citeproc{ref-ito2014predicting}{22}} modeled CDR-SB trajectories to predict
+time to clinically meaningful worsening in MCI patients,
+finding that the median time to a 1-point change was
+approximately 2 years---informing both trial duration and
+sample size planning.
 
 \subsection{Present study}\label{present-study}
 
-Despite the theoretical and empirical evidence favoring continuous
-measures, the comparison between MMRM and survival analysis for AD
-endpoints has not been systematically examined in a simulation that uses
-the global CDR as both a continuous outcome and the basis for a survival
-endpoint defined by conversion from CDR 0.5 (MCI/very mild dementia) to
-CDR 1.0 or higher (mild dementia). The present study addresses this gap
-through a Monte Carlo simulation that generates realistic CDR
-trajectories under a plausible data-generating model and compares the
-statistical properties of MMRM and Cox regression applied to the same
-simulated trial data.
+Despite the theoretical and empirical evidence favoring
+continuous measures, the comparison between MMRM and
+survival analysis for AD endpoints has not been
+systematically examined in a simulation that uses the
+global CDR as both a continuous outcome and the basis for
+a survival endpoint defined by conversion from CDR 0.5
+(MCI/very mild dementia) to CDR 1.0 or higher (mild
+dementia). We address this gap through a
+Monte Carlo simulation that generates realistic CDR
+trajectories under a plausible data-generating model and
+compares the statistical properties of MMRM and Cox
+regression applied to the same simulated trial data.
 
 \section{Methods}\label{methods}
 
 \subsection{ADEMP structure}\label{ademp-structure}
 
-Following Morris, White, and
-Crowther\textsuperscript{\citeproc{ref-morris2019using}{23}}, the
+Following Morris, White, and Crowther\textsuperscript{\citeproc{ref-morris2019using}{23}}, the
 simulation is reported under the ADEMP framework.
 
 \begin{itemize}
@@ -378,8 +443,8 @@ simulation is reported under the ADEMP framework.
 \item
   \textbf{Aims.} Compare the operating characteristics of an MMRM on
   change-from-baseline in latent CDR versus a Cox proportional hazards
-  model on time to first CDR \(\geq 1.0\), under an Alzheimer's-disease
-  DGM with informative dropout.
+  model on time to first CDR \(\geq 1.0\), under an
+  Alzheimer's-disease DGM with informative dropout.
 \item
   \textbf{Data-generating mechanism.} Mixed-effects model for latent CDR
   trajectories with a discretized observed CDR and outcome-dependent
@@ -391,35 +456,36 @@ simulation is reported under the ADEMP framework.
   \def\labelenumi{(\roman{enumi})}
   \tightlist
   \item
-    For MMRM: the treatment effect on change from baseline in latent CDR
-    at the LAST visit, expressed as the linear combination
+    For MMRM: the treatment effect on change from baseline in
+    latent CDR at the LAST visit, expressed as the linear combination
     \(\beta_{\mathrm{trt}} + \beta_{\mathrm{trt:visit}_K}\).
   \item
     For Cox: the log-hazard ratio for time to first CDR \(\geq 1.0\).
   \end{enumerate}
 \item
-  \textbf{Methods.} MMRM via \texttt{nlme::gls} with unstructured
-  covariance; Cox via \texttt{survival::coxph}.
+  \textbf{Methods.} MMRM via \texttt{nlme::gls} with unstructured covariance;
+  Cox via \texttt{survival::coxph}.
 \item
-  \textbf{Performance measures.} Bias, empirical SE, mean model SE,
-  power, coverage, and convergence rate, each reported with its Monte
-  Carlo SE per Morris Table 6. With \(n_{\mathrm{sim}} = 2000\), the
-  Monte Carlo SE for power at \(p = 0.5\) is
+  \textbf{Performance measures.} Bias, empirical SE, mean model SE, power,
+  coverage, and convergence rate, each reported with its Monte Carlo
+  SE per Morris Table 6. With \(n_{\mathrm{sim}} = 2000\), the Monte
+  Carlo SE for power at \(p = 0.5\) is
   \(\sqrt{0.5 \times 0.5 / 2000} = 0.011\); for coverage at \(0.95\),
   MCSE \(\approx 0.005\).
 \end{itemize}
 
 \subsection{Data generating model}\label{data-generating-model}
 
-We simulate a two-arm, placebo-controlled trial with \(n = 200\)
-participants per arm, all entering with a baseline global CDR of 0.5.
-The primary continuous outcome is the global CDR score observed at
-visits scheduled every 6 months over 24 months (5 post-baseline visits).
-The survival endpoint is time to conversion from CDR 0.5 to CDR \(\geq\)
-1.0.
+We simulate a two-arm, placebo-controlled trial with
+\(n = 200\) participants per arm, all entering with a
+baseline global CDR of 0.5. The primary continuous outcome
+is the global CDR score observed at visits scheduled every
+6 months over 24 months (5 post-baseline visits). The
+survival endpoint is time to conversion from CDR 0.5 to
+CDR \(\geq\) 1.0.
 
-The latent continuous disease severity \(Y_{ij}^*\) for participant
-\(i\) at visit \(j\) is modeled as:
+The latent continuous disease severity \(Y_{ij}^*\) for
+participant \(i\) at visit \(j\) is modeled as:
 
 \[
 Y_{ij}^* = \beta_0 + \beta_1 t_j + \beta_2 T_i
@@ -427,20 +493,22 @@ Y_{ij}^* = \beta_0 + \beta_1 t_j + \beta_2 T_i
   + \epsilon_{ij}
 \]
 
-where \(t_j\) is visit time in years, \(T_i\) is the treatment indicator
-(0 = placebo, 1 = active), \(b_{0i}\) and \(b_{1i}\) are
-participant-specific random intercepts and slopes drawn from a bivariate
-normal distribution, and \(\epsilon_{ij} \sim N(0, \sigma^2)\) is
-residual error.
+where \(t_j\) is visit time in years, \(T_i\) is the
+treatment indicator (0 = placebo, 1 = active), \(b_{0i}\)
+and \(b_{1i}\) are participant-specific random intercepts
+and slopes drawn from a bivariate normal distribution,
+and \(\epsilon_{ij} \sim N(0, \sigma^2)\) is residual error.
 
-The observed global CDR is obtained by mapping \(Y^*\) to the CDR
-staging categories \{0, 0.5, 1, 2, 3\} using threshold parameters
-calibrated to observed CDR distributions in ADNI.
+The observed global CDR is obtained by mapping \(Y^*\) to
+the CDR staging categories \{0, 0.5, 1, 2, 3\} using
+threshold parameters calibrated to observed CDR
+distributions in ADNI.
 
 \subsection{Parameter values}\label{parameter-values}
 
-The simulation parameters are selected to reflect plausible progression
-rates in a population with MCI due to AD (CDR 0.5 at baseline):
+The simulation parameters are selected to reflect
+plausible progression rates in a population with MCI due
+to AD (CDR 0.5 at baseline):
 
 \begin{table}[!h]
 \centering
@@ -474,14 +542,14 @@ Dropout rate & 15\%/year & MAR dropout, severity-dependent\\
 \item
   \textbf{Visit schedule:} Baseline, 6, 12, 18, 24 months
 \item
-  \textbf{Survival endpoint:} Time from randomization to first visit
-  with global CDR \(\geq\) 1.0
+  \textbf{Survival endpoint:} Time from randomization to first
+  visit with global CDR \(\geq\) 1.0
 \item
-  \textbf{MMRM endpoint:} Change from baseline in latent CDR score at 24
-  months
+  \textbf{MMRM endpoint:} Change from baseline in latent
+  CDR score at 24 months
 \item
-  \textbf{Treatment effect:} 25\% slowing of progression (hazard ratio
-  \(\approx\) 0.75 for the survival endpoint)
+  \textbf{Treatment effect:} 25\% slowing of progression
+  (hazard ratio \(\approx\) 0.75 for the survival endpoint)
 \end{itemize}
 
 \subsection{Simulation procedure}\label{simulation-procedure}
@@ -546,15 +614,16 @@ For each of \(R = 2000\) replications, we:
 \item
   Apply severity-dependent MAR dropout.
 \item
-  Fit an MMRM to the change from baseline in the latent CDR score, with
-  treatment, visit, treatment-by-visit interaction, and baseline score
-  as covariates, using an unstructured covariance matrix.
+  Fit an MMRM to the change from baseline in the latent
+  CDR score, with treatment, visit, treatment-by-visit
+  interaction, and baseline score as covariates, using an
+  unstructured covariance matrix.
 \item
-  Fit a Cox proportional hazards model to time to first CDR \(\geq\)
-  1.0, with treatment as the sole covariate.
+  Fit a Cox proportional hazards model to time to first
+  CDR \(\geq\) 1.0, with treatment as the sole covariate.
 \item
-  Record the treatment effect estimate, standard error, p-value, and
-  95\% confidence interval from each model.
+  Record the treatment effect estimate, standard error,
+  p-value, and 95\% confidence interval from each model.
 \end{enumerate}
 
 \subsection{Analysis plan}\label{analysis-plan}
@@ -638,24 +707,36 @@ For each method, we compute:
 \item
   \textbf{Power:} Proportion of replications with \(p < 0.05\)
 \item
-  \textbf{Coverage:} Proportion of 95\% CIs containing the true value
+  \textbf{Coverage:} Proportion of 95\% CIs containing the true
+  value
 \item
-  \textbf{Convergence rate:} Proportion of replications producing valid
-  estimates
+  \textbf{Convergence rate:} Proportion of replications
+  producing valid estimates
 \end{itemize}
 
 \section{Results}\label{results}
 
 \subsection{Headline findings}\label{headline-findings}
 
-Under the data-generating model (true MMRM effect \(= -0.15\), true
-log-hazard ratio \(= \log 0.75
-\approx -0.288\)), the MMRM estimator recovered its estimand with bias
--0.003 (MCSE 0.001), empirical SE 0.034, power 0.994, and coverage
-0.954. The Cox model's log-hazard-ratio estimator had bias -0.002 (MCSE
-0.002), empirical SE 0.110, power 0.716, and coverage 0.961. Convergence
-was 1.000 for MMRM and 1.000 for Cox across 2000 valid replications per
-method. Both estimands use the Morris Table 6 Monte Carlo SEs reported
+Under the data-generating model (true MMRM effect
+\(= -0.15\), true log-hazard ratio \(= \log 0.75
+\approx -0.288\)), the MMRM estimator recovered its
+estimand with bias
+-0.003 (MCSE
+0.001), empirical SE
+0.034, power
+0.994, and coverage
+0.954. The Cox model's
+log-hazard-ratio estimator had bias
+-0.002 (MCSE
+0.002), empirical SE
+0.110, power
+0.716, and coverage
+0.961. Convergence was
+1.000 for MMRM and
+1.000 for Cox across
+2000 valid replications per method. Both
+estimands use the Morris Table 6 Monte Carlo SEs reported
 in Table 1 below.
 
 \subsection{Summary statistics}\label{summary-statistics}
@@ -681,124 +762,123 @@ Cox & 2000 & -0.002 & 0.002 & 0.110 & 0.002 & 0.116 & 0.716 & 0.010 & 0.961 & 0.
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio,alt={Empirical power as a function of per-arm sample size for MMRM and Cox proportional hazards, at 200 replicates per cell. MMRM uniformly dominates Cox across the explored range, with the gap widest at n\_\{\textbackslash mathrm\{per\textbackslash,arm\}\} = 100.}]{report_files/report_files/figure-latex/power-comparison-1.pdf}}
-\caption{Empirical power as a function of per-arm sample size for MMRM
-and Cox proportional hazards, at 200 replicates per cell. MMRM uniformly
-dominates Cox across the explored range, with the gap widest at
-\(n_{\mathrm{per\,arm}} = 100\).}
+\caption{Empirical power as a function of per-arm sample size for MMRM and Cox proportional hazards, at 200 replicates per cell. MMRM uniformly dominates Cox across the explored range, with the gap widest at \(n_{\mathrm{per\,arm}} = 100\).}
 \end{figure}
 
 \begin{figure}
 \centering
 \pandocbounded{\includegraphics[keepaspectratio,alt={Distribution of per-replication treatment-effect estimates across 2,000 simulated trials at n\_\{\textbackslash mathrm\{per\textbackslash,arm\}\} = 200. MMRM and Cox estimands are on different scales (continuous CDR-SB rate vs log hazard ratio); the comparison is qualitative.}]{report_files/report_files/figure-latex/density-plot-1.pdf}}
-\caption{Distribution of per-replication treatment-effect estimates
-across 2,000 simulated trials at \(n_{\mathrm{per\,arm}} = 200\). MMRM
-and Cox estimands are on different scales (continuous CDR-SB rate vs log
-hazard ratio); the comparison is qualitative.}
+\caption{Distribution of per-replication treatment-effect estimates across 2,000 simulated trials at \(n_{\mathrm{per\,arm}} = 200\). MMRM and Cox estimands are on different scales (continuous CDR-SB rate vs log hazard ratio); the comparison is qualitative.}
 \end{figure}
 
 \section{Discussion}\label{discussion}
 
-The historical review reveals that the convergence of AD trials on MMRM
-and change-score estimands resulted from three reinforcing forces: (1)
-the regulatory requirement for continuous cognitive and functional
-co-primary endpoints, established
-by\textsuperscript{\citeproc{ref-leber1990guidelines}{5}}; (2) the
-decisive empirical evidence against LOCF as a primary analysis method,
-led by\textsuperscript{\citeproc{ref-mallinckrodt2001dropout}{9}} and
-codified by the\textsuperscript{\citeproc{ref-nrc2010missing}{14}}
-panel; and (3) the statistical efficiency advantages of modeling
-repeated continuous data relative to dichotomizing into time-to-event
-endpoints, as demonstrated
-by\textsuperscript{\citeproc{ref-donohue2011relative}{19}}
-and\textsuperscript{\citeproc{ref-li2019relative}{20}}.
+The historical review reveals that the convergence of AD
+trials on MMRM and change-score estimands resulted from
+three reinforcing forces: (1) the regulatory requirement
+for continuous cognitive and functional co-primary
+endpoints, established by\textsuperscript{\citeproc{ref-leber1990guidelines}{5}}; (2) the
+decisive empirical evidence against LOCF as a primary
+analysis method, led by\textsuperscript{\citeproc{ref-mallinckrodt2001dropout}{9}} and
+codified by the\textsuperscript{\citeproc{ref-nrc2010missing}{14}} panel; and (3) the
+statistical efficiency advantages of modeling repeated
+continuous data relative to dichotomizing into time-to-event
+endpoints, as demonstrated by\textsuperscript{\citeproc{ref-donohue2011relative}{19}} and\textsuperscript{\citeproc{ref-li2019relative}{20}}.
 
-Oncology, by contrast, arrived at a different equilibrium because its
-primary endpoint---death---is inherently binary and irreversible,
-because the proportional hazards framework has deep regulatory
-precedent, and because no single continuous severity measure plays the
-role that ADAS-Cog or CDR-SB plays in
-AD\textsuperscript{\citeproc{ref-fda2018oncology}{1},\citeproc{ref-fleming1996surrogate}{2}}.
+Oncology, by contrast, arrived at a different equilibrium
+because its primary endpoint---death---is inherently
+binary and irreversible, because the proportional hazards
+framework has deep regulatory precedent, and because no
+single continuous severity measure plays the role that
+ADAS-Cog or CDR-SB plays in AD\textsuperscript{\citeproc{ref-fda2018oncology}{1},\citeproc{ref-fleming1996surrogate}{2}}.
 
-The simulation results are expected to confirm the theoretical
-predictions from the literature: MMRM should yield substantially greater
-power than Cox regression when both are applied to CDR data from the
-same simulated trial, because the continuous analysis uses information
-from the full trajectory of scores at every visit, whereas the survival
-analysis reduces this trajectory to a single binary event. The power
-advantage should be most pronounced in the MCI-to-mild-dementia
-transition modeled here, where conversion rates are modest and many
-participants in a 24-month trial will not reach the CDR \(\geq\) 1.0
-threshold, resulting in heavy right-censoring that limits the
+We expect the simulation results to confirm the theoretical
+predictions from the literature: MMRM should yield
+substantially greater power than Cox regression when both
+are applied to CDR data from the same simulated trial,
+because the continuous analysis uses information from the
+full trajectory of scores at every visit, whereas the
+survival analysis reduces this trajectory to a single
+binary event. The power advantage should be most pronounced
+in the MCI-to-mild-dementia transition modeled here, where
+conversion rates are modest and many participants in a
+24-month trial will not reach the CDR \(\geq\) 1.0 threshold,
+resulting in heavy right-censoring that limits the
 information available to the Cox model.
 
-Several caveats warrant emphasis. First, the comparison is inherently
-asymmetric: the MMRM uses more information from each participant (all
-visits) than the Cox model (only the first conversion event). Second,
-the survival endpoint is limited by the visit schedule; true conversion
-may occur between visits, introducing interval censoring that the
-standard Cox model does not accommodate. Third, the relative efficiency
-depends on the threshold chosen; a threshold that most participants
-cross during follow-up would shift the balance toward the survival
-analysis. Fourth, the clinical relevance of the two estimands differs: a
-treatment effect expressed as slowing of CDR-SB decline addresses a
-different clinical question than one expressed as delay to a diagnostic
-milestone. Both may be meaningful to patients and regulators, and the
-choice between them should be driven by the estimand framework
-of\textsuperscript{\citeproc{ref-ich2019e9r1}{15}} rather than by
-statistical convenience alone.
+Several caveats warrant emphasis. First, the comparison is
+inherently asymmetric: the MMRM uses more information from
+each participant (all visits) than the Cox model (only the
+first conversion event). Second, the survival endpoint is
+limited by the visit schedule; true conversion may occur
+between visits, introducing interval censoring that the
+standard Cox model does not accommodate. Third, the
+relative efficiency depends on the threshold chosen; a
+threshold that most participants cross during follow-up
+would shift the balance toward the survival analysis.
+Fourth, the clinical relevance of the two estimands
+differs: a treatment effect expressed as slowing of
+CDR-SB decline addresses a different clinical question than
+one expressed as delay to a diagnostic milestone. Both may
+be meaningful to patients and regulators, and the choice
+between them should be driven by the estimand framework of\textsuperscript{\citeproc{ref-ich2019e9r1}{15}} rather than by statistical convenience alone.
 
 \section{Future research}\label{future-research}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  \textbf{Additional covariance structures.} The present simulation
-  assumes MAR dropout. Extensions under MNAR mechanisms (e.g.,
-  pattern-mixture models, selection models) would illuminate the
-  robustness of each method under more adversarial missingness.
+  \textbf{Additional covariance structures.} The present
+  simulation assumes MAR dropout. Extensions under MNAR
+  mechanisms (e.g., pattern-mixture models, selection
+  models) would illuminate the robustness of each method
+  under more adversarial missingness.
 \item
-  \textbf{Nonlinear trajectories.} AD progression is not strictly
-  linear, particularly in the transition from MCI to dementia.
-  Simulation of sigmoidal or piecewise trajectories would test the
-  sensitivity of MMRM (which makes no linearity assumption) relative to
-  slope-based alternatives.
+  \textbf{Nonlinear trajectories.} AD progression is not
+  strictly linear, particularly in the transition from
+  MCI to dementia. Simulation of sigmoidal or piecewise
+  trajectories would test the sensitivity of MMRM (which
+  makes no linearity assumption) relative to slope-based
+  alternatives.
 \item
-  \textbf{Alternative survival formulations.} Interval-censored survival
-  models and multi-state models that accommodate transitions among CDR
-  stages (0.5 \(\to\) 1 \(\to\) 2 \(\to\) 3) could recover some of the
-  information lost by standard Cox regression.
+  \textbf{Alternative survival formulations.} Interval-censored
+  survival models and multi-state models that accommodate
+  transitions among CDR stages (0.5 \(\to\) 1 \(\to\) 2
+  \(\to\) 3) could recover some of the information lost by
+  standard Cox regression.
 \item
-  \textbf{Joint modeling.} Joint models of longitudinal CDR trajectories
-  and the time-to-conversion event could unify the two analytic
-  approaches, potentially offering both the efficiency of longitudinal
-  modeling and the clinical interpretability of a time-to-event
-  estimand.
+  \textbf{Joint modeling.} Joint models of longitudinal CDR
+  trajectories and the time-to-conversion event could
+  unify the two analytic approaches, potentially offering
+  both the efficiency of longitudinal modeling and the
+  clinical interpretability of a time-to-event estimand.
 \item
-  \textbf{Software tools.} An R package implementing the simulation
-  framework and providing power calculation utilities for both MMRM and
-  survival designs in AD trials would facilitate trial planning.
+  \textbf{Software tools.} An R package implementing the
+  simulation framework and providing power calculation
+  utilities for both MMRM and survival designs in AD
+  trials would facilitate trial planning.
 \item
-  \textbf{Applied validation.} Retrospective application of both methods
-  to completed trial datasets (e.g., from the ADCS or ADNI) would
-  ground-truth the simulation findings in real data with genuine
-  missingness patterns and measurement properties.
+  \textbf{Applied validation.} Retrospective application of
+  both methods to completed trial datasets (e.g., from the
+  ADCS or ADNI) would ground-truth the simulation
+  findings in real data with genuine missingness patterns
+  and measurement properties.
 \item
-  \textbf{Estimand alignment.} Further work is needed to clarify how the
-  ICH E9(R1) estimand framework should be applied when the same
-  underlying data support both change-score and time-to-event estimands,
-  particularly regarding the handling of intercurrent events such as
+  \textbf{Estimand alignment.} Further work is needed to
+  clarify how the ICH E9(R1) estimand framework should
+  be applied when the same underlying data support both
+  change-score and time-to-event estimands, particularly
+  regarding the handling of intercurrent events such as
   treatment switching or rescue medication.
 \end{enumerate}
 
 \section{References}\label{references}
 
-\subsection{Morris et al.~(2019) ADEMP
-Compliance}\label{morris-et-al.-2019-ademp-compliance}
+\subsection{Morris et al.~(2019) ADEMP Compliance}\label{morris-et-al.-2019-ademp-compliance}
 
-This simulation study was audited against the reporting standards
-proposed by Morris, White, and
-Crowther\textsuperscript{\citeproc{ref-morris2019using}{23}}. The full
-audit is at \texttt{docs/morris-audit-2026-04-17.md}.
+We audited this simulation study against the reporting
+standards proposed by Morris, White, and Crowther\textsuperscript{\citeproc{ref-morris2019using}{23}}. The full audit is recorded at
+\texttt{docs/morris-audit-2026-04-17.md}.
 
 \textbf{Verdict:} Not compliant.
 
@@ -807,194 +887,112 @@ audit is at \texttt{docs/morris-audit-2026-04-17.md}.
 \begin{itemize}
 \tightlist
 \item
-  Most report chunks are \texttt{eval=FALSE}; results are never produced
-  by the rendered report.
+  Most report chunks are \texttt{eval=FALSE}; results are never
+  produced by the rendered report.
 \item
   Estimand extractor at \texttt{sim\_study.R:92} falls back to
-  \texttt{grep(\textquotesingle{}trt\textquotesingle{}){[}1{]}} which
-  can silently pick a \texttt{trt:visit\_f} interaction term.
+  \texttt{grep(\textquotesingle{}trt\textquotesingle{}){[}1{]}}, which can silently pick a
+  \texttt{trt:visit\_f} interaction term.
 \item
   No Monte Carlo SE on any metric.
 \end{itemize}
 
-A remediation plan is documented in the audit file and will be executed
-in a subsequent revision.
-
-\vfill
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-\emph{Rendered on 2026-05-11 at 09:41 PDT.}\\
-\emph{Source:
-\texttt{\textasciitilde{}/prj/res/13-mmrm-vs-survival-ad/mmrmsurvival/analysis/report/report.Rmd}}
+A remediation plan is recorded in the audit file and will
+be taken up in a subsequent revision.
 
 \protect\phantomsection\label{refs}
 \begin{CSLReferences}{0}{1}
 \bibitem[\citeproctext]{ref-fda2018oncology}
 \CSLLeftMargin{1. }%
-\CSLRightInline{U.S. Food and Drug Administration. \emph{Clinical Trial
-Endpoints for the Approval of Cancer Drugs and Biologics. Guidance for
-Industry}. Center for Drug Evaluation; Research; 2018.}
+\CSLRightInline{U.S. Food and Drug Administration. \emph{Clinical Trial Endpoints for the Approval of Cancer Drugs and Biologics. Guidance for Industry}. Center for Drug Evaluation; Research; 2018.}
 
 \bibitem[\citeproctext]{ref-fleming1996surrogate}
 \CSLLeftMargin{2. }%
-\CSLRightInline{Fleming TR, DeMets DL. Surrogate end points in clinical
-trials: Are we being misled? \emph{Annals of Internal Medicine}.
-1996;125(7):605-613.
-doi:\href{https://doi.org/10.7326/0003-4819-125-7-199610010-00011}{10.7326/0003-4819-125-7-199610010-00011}}
+\CSLRightInline{Fleming TR, DeMets DL. Surrogate end points in clinical trials: Are we being misled? \emph{Annals of Internal Medicine}. 1996;125(7):605-613. doi:\href{https://doi.org/10.7326/0003-4819-125-7-199610010-00011}{10.7326/0003-4819-125-7-199610010-00011}}
 
 \bibitem[\citeproctext]{ref-donohue2012mmrm}
 \CSLLeftMargin{3. }%
-\CSLRightInline{Donohue MC, Aisen PS. Mixed model of repeated measures
-versus slope models in {Alzheimer's} disease clinical trials. \emph{The
-Journal of Nutrition, Health \& Aging}. 2012;16(4):360-364.
-doi:\href{https://doi.org/10.1007/s12603-012-0047-7}{10.1007/s12603-012-0047-7}}
+\CSLRightInline{Donohue MC, Aisen PS. Mixed model of repeated measures versus slope models in {Alzheimer's} disease clinical trials. \emph{The Journal of Nutrition, Health \& Aging}. 2012;16(4):360-364. doi:\href{https://doi.org/10.1007/s12603-012-0047-7}{10.1007/s12603-012-0047-7}}
 
 \bibitem[\citeproctext]{ref-mallinckrodt2003assessing}
 \CSLLeftMargin{4. }%
-\CSLRightInline{Mallinckrodt CH, Sanger TM, Dubé S, et al. Assessing and
-interpreting treatment effects in longitudinal clinical trials with
-missing data. \emph{Biological Psychiatry}. 2003;53(8):754-760.
-doi:\href{https://doi.org/10.1016/S0006-3223(02)01867-X}{10.1016/S0006-3223(02)01867-X}}
+\CSLRightInline{Mallinckrodt CH, Sanger TM, Dubé S, et al. Assessing and interpreting treatment effects in longitudinal clinical trials with missing data. \emph{Biological Psychiatry}. 2003;53(8):754-760. doi:\href{https://doi.org/10.1016/S0006-3223(02)01867-X}{10.1016/S0006-3223(02)01867-X}}
 
 \bibitem[\citeproctext]{ref-leber1990guidelines}
 \CSLLeftMargin{5. }%
-\CSLRightInline{Leber P. \emph{Guidelines for the Clinical Evaluation of
-Antidementia Drugs, First Draft}. U.S. Food; Drug Administration; 1990.}
+\CSLRightInline{Leber P. \emph{Guidelines for the Clinical Evaluation of Antidementia Drugs, First Draft}. U.S. Food; Drug Administration; 1990.}
 
 \bibitem[\citeproctext]{ref-rosen1984adas}
 \CSLLeftMargin{6. }%
-\CSLRightInline{Rosen WG, Mohs RC, Davis KL. A new rating scale for
-{Alzheimer's} disease. \emph{The American Journal of Psychiatry}.
-1984;141(11):1356-1364.
-doi:\href{https://doi.org/10.1176/ajp.141.11.1356}{10.1176/ajp.141.11.1356}}
+\CSLRightInline{Rosen WG, Mohs RC, Davis KL. A new rating scale for {Alzheimer's} disease. \emph{The American Journal of Psychiatry}. 1984;141(11):1356-1364. doi:\href{https://doi.org/10.1176/ajp.141.11.1356}{10.1176/ajp.141.11.1356}}
 
 \bibitem[\citeproctext]{ref-morris1993cdr}
 \CSLLeftMargin{7. }%
-\CSLRightInline{Morris JC. The {Clinical Dementia Rating} ({CDR}):
-Current version and scoring rules. \emph{Neurology}.
-1993;43(11):2412-2414.
-doi:\href{https://doi.org/10.1212/WNL.43.11.2412-a}{10.1212/WNL.43.11.2412-a}}
+\CSLRightInline{Morris JC. The {Clinical Dementia Rating} ({CDR}): Current version and scoring rules. \emph{Neurology}. 1993;43(11):2412-2414. doi:\href{https://doi.org/10.1212/WNL.43.11.2412-a}{10.1212/WNL.43.11.2412-a}}
 
 \bibitem[\citeproctext]{ref-fda2018earlyad}
 \CSLLeftMargin{8. }%
-\CSLRightInline{U.S. Food and Drug Administration. \emph{Early
-{Alzheimer's} Disease: Developing Drugs for Treatment. Guidance for
-Industry}. Center for Drug Evaluation; Research; 2018.}
+\CSLRightInline{U.S. Food and Drug Administration. \emph{Early {Alzheimer's} Disease: Developing Drugs for Treatment. Guidance for Industry}. Center for Drug Evaluation; Research; 2018.}
 
 \bibitem[\citeproctext]{ref-mallinckrodt2001dropout}
 \CSLLeftMargin{9. }%
-\CSLRightInline{Mallinckrodt CH, Clark WS, David SR. Accounting for
-dropout bias using mixed-effects models. \emph{Journal of
-Biopharmaceutical Statistics}. 2001;11(1--2):9-21.
-doi:\href{https://doi.org/10.1081/BIP-100104194}{10.1081/BIP-100104194}}
+\CSLRightInline{Mallinckrodt CH, Clark WS, David SR. Accounting for dropout bias using mixed-effects models. \emph{Journal of Biopharmaceutical Statistics}. 2001;11(1--2):9-21. doi:\href{https://doi.org/10.1081/BIP-100104194}{10.1081/BIP-100104194}}
 
 \bibitem[\citeproctext]{ref-mallinckrodt2001typei}
 \CSLLeftMargin{10. }%
-\CSLRightInline{Mallinckrodt CH, Clark WS, David SR. Type {I} error
-rates from mixed effects model repeated measures versus fixed effects
-{ANOVA} with missing values imputed via last observation carried
-forward. \emph{Drug Information Journal}. 2001;35(4):1215-1225.
-doi:\href{https://doi.org/10.1177/009286150103500418}{10.1177/009286150103500418}}
+\CSLRightInline{Mallinckrodt CH, Clark WS, David SR. Type {I} error rates from mixed effects model repeated measures versus fixed effects {ANOVA} with missing values imputed via last observation carried forward. \emph{Drug Information Journal}. 2001;35(4):1215-1225. doi:\href{https://doi.org/10.1177/009286150103500418}{10.1177/009286150103500418}}
 
 \bibitem[\citeproctext]{ref-mallinckrodt2003response}
 \CSLLeftMargin{11. }%
-\CSLRightInline{Mallinckrodt CH, Clark WS, Carroll RJ, Molenberghs G.
-Assessing response profiles from incomplete longitudinal clinical trial
-data under regulatory considerations. \emph{Journal of Biopharmaceutical
-Statistics}. 2003;13(2):179-190.
-doi:\href{https://doi.org/10.1081/BIP-120019265}{10.1081/BIP-120019265}}
+\CSLRightInline{Mallinckrodt CH, Clark WS, Carroll RJ, Molenberghs G. Assessing response profiles from incomplete longitudinal clinical trial data under regulatory considerations. \emph{Journal of Biopharmaceutical Statistics}. 2003;13(2):179-190. doi:\href{https://doi.org/10.1081/BIP-120019265}{10.1081/BIP-120019265}}
 
 \bibitem[\citeproctext]{ref-obrien2005semiparametric}
 \CSLLeftMargin{12. }%
-\CSLRightInline{O'Brien PC, Zhang D, Bailey KR. Semi-parametric and
-non-parametric methods for clinical trials with incomplete data.
-\emph{Statistics in Medicine}. 2005;24(3):341-358.
-doi:\href{https://doi.org/10.1002/sim.1963}{10.1002/sim.1963}}
+\CSLRightInline{O'Brien PC, Zhang D, Bailey KR. Semi-parametric and non-parametric methods for clinical trials with incomplete data. \emph{Statistics in Medicine}. 2005;24(3):341-358. doi:\href{https://doi.org/10.1002/sim.1963}{10.1002/sim.1963}}
 
 \bibitem[\citeproctext]{ref-molenberghs2004analyzing}
 \CSLLeftMargin{13. }%
-\CSLRightInline{Molenberghs G, Thijs H, Jansen I, et al. Analyzing
-incomplete longitudinal clinical trial data. \emph{Biostatistics}.
-2004;5(3):445-464.
-doi:\href{https://doi.org/10.1093/biostatistics/kxh001}{10.1093/biostatistics/kxh001}}
+\CSLRightInline{Molenberghs G, Thijs H, Jansen I, et al. Analyzing incomplete longitudinal clinical trial data. \emph{Biostatistics}. 2004;5(3):445-464. doi:\href{https://doi.org/10.1093/biostatistics/kxh001}{10.1093/biostatistics/kxh001}}
 
 \bibitem[\citeproctext]{ref-nrc2010missing}
 \CSLLeftMargin{14. }%
-\CSLRightInline{National Research Council. \emph{The Prevention and
-Treatment of Missing Data in Clinical Trials}. The National Academies
-Press; 2010. doi:\href{https://doi.org/10.17226/12955}{10.17226/12955}}
+\CSLRightInline{National Research Council. \emph{The Prevention and Treatment of Missing Data in Clinical Trials}. The National Academies Press; 2010. doi:\href{https://doi.org/10.17226/12955}{10.17226/12955}}
 
 \bibitem[\citeproctext]{ref-ich2019e9r1}
 \CSLLeftMargin{15. }%
-\CSLRightInline{International Council for Harmonisation. \emph{{ICH
-E9(R1)}: Addendum on Estimands and Sensitivity Analysis in Clinical
-Trials to the Guideline on Statistical Principles for Clinical Trials}.
-ICH; 2019.}
+\CSLRightInline{International Council for Harmonisation. \emph{{ICH E9(R1)}: Addendum on Estimands and Sensitivity Analysis in Clinical Trials to the Guideline on Statistical Principles for Clinical Trials}. ICH; 2019.}
 
 \bibitem[\citeproctext]{ref-wang2018dpm}
 \CSLLeftMargin{16. }%
-\CSLRightInline{Wang G, Berry S, Xiong C, et al. A novel cognitive
-disease progression model for clinical trials in autosomal-dominant
-{Alzheimer's} disease. \emph{Statistics in Medicine}.
-2018;37(21):3047-3055.
-doi:\href{https://doi.org/10.1002/sim.7811}{10.1002/sim.7811}}
+\CSLRightInline{Wang G, Berry S, Xiong C, et al. A novel cognitive disease progression model for clinical trials in autosomal-dominant {Alzheimer's} disease. \emph{Statistics in Medicine}. 2018;37(21):3047-3055. doi:\href{https://doi.org/10.1002/sim.7811}{10.1002/sim.7811}}
 
 \bibitem[\citeproctext]{ref-buddhaeberlein2022aducanumab}
 \CSLLeftMargin{17. }%
-\CSLRightInline{Budd Haeberlein S, Aisen PS, Barkhof F, et al. Two
-randomized phase 3 studies of aducanumab in early {Alzheimer's} disease.
-\emph{The Journal of Prevention of Alzheimer's Disease}.
-2022;9(2):197-210.
-doi:\href{https://doi.org/10.14283/jpad.2022.30}{10.14283/jpad.2022.30}}
+\CSLRightInline{Budd Haeberlein S, Aisen PS, Barkhof F, et al. Two randomized phase 3 studies of aducanumab in early {Alzheimer's} disease. \emph{The Journal of Prevention of Alzheimer's Disease}. 2022;9(2):197-210. doi:\href{https://doi.org/10.14283/jpad.2022.30}{10.14283/jpad.2022.30}}
 
 \bibitem[\citeproctext]{ref-dhadda2022lecanemab}
 \CSLLeftMargin{18. }%
-\CSLRightInline{Dhadda S, Kanekiyo M, Li D, et al. Consistency of
-efficacy results across various clinical measures and statistical
-methods in the lecanemab phase 2 trial of early {Alzheimer's} disease.
-\emph{Alzheimer's Research \& Therapy}. 2022;14(1):182.
-doi:\href{https://doi.org/10.1186/s13195-022-01129-x}{10.1186/s13195-022-01129-x}}
+\CSLRightInline{Dhadda S, Kanekiyo M, Li D, et al. Consistency of efficacy results across various clinical measures and statistical methods in the lecanemab phase 2 trial of early {Alzheimer's} disease. \emph{Alzheimer's Research \& Therapy}. 2022;14(1):182. doi:\href{https://doi.org/10.1186/s13195-022-01129-x}{10.1186/s13195-022-01129-x}}
 
 \bibitem[\citeproctext]{ref-donohue2011relative}
 \CSLLeftMargin{19. }%
-\CSLRightInline{Donohue MC, Gamst AC, Thomas RG, et al. The relative
-efficiency of time-to-threshold and rate of change in longitudinal data.
-\emph{Contemporary Clinical Trials}. 2011;32(5):685-693.
-doi:\href{https://doi.org/10.1016/j.cct.2011.04.007}{10.1016/j.cct.2011.04.007}}
+\CSLRightInline{Donohue MC, Gamst AC, Thomas RG, et al. The relative efficiency of time-to-threshold and rate of change in longitudinal data. \emph{Contemporary Clinical Trials}. 2011;32(5):685-693. doi:\href{https://doi.org/10.1016/j.cct.2011.04.007}{10.1016/j.cct.2011.04.007}}
 
 \bibitem[\citeproctext]{ref-li2019relative}
 \CSLLeftMargin{20. }%
-\CSLRightInline{Li D, Iddi S, Aisen PS, Thompson WK, Donohue MC. The
-relative efficiency of time-to-progression and continuous measures of
-cognition in presymptomatic {Alzheimer's} disease. \emph{Alzheimer's \&
-Dementia: Translational Research \& Clinical Interventions}.
-2019;5:308-318.
-doi:\href{https://doi.org/10.1016/j.trci.2019.04.004}{10.1016/j.trci.2019.04.004}}
+\CSLRightInline{Li D, Iddi S, Aisen PS, Thompson WK, Donohue MC. The relative efficiency of time-to-progression and continuous measures of cognition in presymptomatic {Alzheimer's} disease. \emph{Alzheimer's \& Dementia: Translational Research \& Clinical Interventions}. 2019;5:308-318. doi:\href{https://doi.org/10.1016/j.trci.2019.04.004}{10.1016/j.trci.2019.04.004}}
 
 \bibitem[\citeproctext]{ref-jonsson2024progression}
 \CSLLeftMargin{21. }%
-\CSLRightInline{Jönsson L, Ivkovic M, Atri A, et al. Progression
-analysis versus traditional methods to quantify slowing of disease
-progression in {Alzheimer's} disease. \emph{Alzheimer's Research \&
-Therapy}. 2024;16(1):48.
-doi:\href{https://doi.org/10.1186/s13195-024-01413-y}{10.1186/s13195-024-01413-y}}
+\CSLRightInline{Jönsson L, Ivkovic M, Atri A, et al. Progression analysis versus traditional methods to quantify slowing of disease progression in {Alzheimer's} disease. \emph{Alzheimer's Research \& Therapy}. 2024;16(1):48. doi:\href{https://doi.org/10.1186/s13195-024-01413-y}{10.1186/s13195-024-01413-y}}
 
 \bibitem[\citeproctext]{ref-ito2014predicting}
 \CSLLeftMargin{22. }%
-\CSLRightInline{Ito K, Hutmacher MM. Predicting the time to clinically
-worsening in mild cognitive impairment patients and its utility in
-clinical trial design by modeling a longitudinal {Clinical Dementia
-Rating Sum of Boxes} from the {ADNI} database. \emph{Journal of
-Alzheimer's Disease}. 2014;40(4):967-979.
-doi:\href{https://doi.org/10.3233/JAD-132090}{10.3233/JAD-132090}}
+\CSLRightInline{Ito K, Hutmacher MM. Predicting the time to clinically worsening in mild cognitive impairment patients and its utility in clinical trial design by modeling a longitudinal {Clinical Dementia Rating Sum of Boxes} from the {ADNI} database. \emph{Journal of Alzheimer's Disease}. 2014;40(4):967-979. doi:\href{https://doi.org/10.3233/JAD-132090}{10.3233/JAD-132090}}
 
 \bibitem[\citeproctext]{ref-morris2019using}
 \CSLLeftMargin{23. }%
-\CSLRightInline{Morris TP, White IR, Crowther MJ. Using simulation
-studies to evaluate statistical methods. \emph{Statistics in Medicine}.
-2019;38(11):2074-2102.
-doi:\href{https://doi.org/10.1002/sim.8086}{10.1002/sim.8086}}
+\CSLRightInline{Morris TP, White IR, Crowther MJ. Using simulation studies to evaluate statistical methods. \emph{Statistics in Medicine}. 2019;38(11):2074-2102. doi:\href{https://doi.org/10.1002/sim.8086}{10.1002/sim.8086}}
 
 \end{CSLReferences}
 

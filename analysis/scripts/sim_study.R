@@ -88,10 +88,26 @@ fit_mmrm <- function(dat) {
 
   if (is.null(mod)) return(c(est = NA, se = NA, p = NA))
 
+  # Convergence diagnostic (pub_review_whitepaper_2026-08-16.md, Major
+  # issue 6): `gls()` does not always throw an R error on failure to
+  # reach an optimum. Two checks distinguish a genuinely converged fit
+  # from one that merely finished without error:
+  #  (1) `mod$apVar` is the approximate variance-covariance matrix of
+  #      the variance/correlation parameters on the transformed scale;
+  #      `nlme` returns a *character* message instead of a matrix when
+  #      the Hessian is not positive definite at the reported optimum,
+  #      which is the standard `nlme` signal of a boundary or
+  #      unidentified solution.
+  #  (2) the optimizer reaching `maxIter` without an internal
+  #      convergence flag is also treated as non-convergence.
+  apvar_ok <- is.matrix(mod$apVar)
+  iter_ok <- is.null(mod$numIter) || mod$numIter < 200
+  if (!apvar_ok || !iter_ok) return(c(est = NA, se = NA, p = NA))
+
   # Estimand: treatment effect at the LAST visit, expressed as the
   # linear combination beta_trt + beta_{trt:visit_f_last}. The previous
   # implementation picked `trt` alone, which under the trt * visit_f
-  # parameterisation corresponds to the treatment effect at the
+  # parameterization corresponds to the treatment effect at the
   # REFERENCE visit, not the last visit. That mismatched the
   # reported true value (-0.15, i.e. beta[4] * (2.5 - 0.5) = -0.15).
   tt <- summary(mod)$tTable

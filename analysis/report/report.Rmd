@@ -34,30 +34,30 @@ abstract: |
   change-from-baseline continuous endpoint, while oncology
   trials primarily use Cox proportional hazards models on a
   time-to-event endpoint. We review the regulatory and
-  empirical history behind this divergence, then use a
-  Monte Carlo simulation, reported under the ADEMP
-  framework of Morris, White, and Crowther (2019), to
-  quantify the efficiency cost of expressing the same
-  underlying disease process --- longitudinal Clinical
-  Dementia Rating (CDR) global-stage progression under
-  realistic, severity-dependent missing-at-random dropout
-  --- as a time-to-conversion survival endpoint rather than
-  a continuous change score. Across 2,000 simulated trials
-  of 200 participants per arm, MMRM substantially
+  empirical history behind this divergence. We then use a
+  Monte Carlo simulation, reported under the ADEMP framework
+  of Morris, White, and Crowther (2019), to quantify the
+  efficiency cost of expressing the same underlying disease
+  process, longitudinal Clinical Dementia Rating (CDR)
+  global-stage progression under realistic,
+  severity-dependent missing-at-random dropout, as a
+  time-to-conversion survival endpoint rather than a
+  continuous change score. Across 2,000 simulated trials of
+  200 participants per arm, we find that MMRM substantially
   outperformed a Cox model applied to the same simulated
-  data on statistical power, consistent with the analytic
-  and empirical efficiency-loss results of Donohue and
-  Sabbagh (2011) and Li et al. (2019) in observational ADNI
-  data. The general result --- that continuous
-  repeated-measures analysis is more efficient than
-  time-to-event analysis of the same disease process --- is
-  therefore not new; this paper's contribution is a
-  transparent, fully reported quantification of that
+  data on statistical power. This finding is consistent with
+  the analytic and empirical efficiency-loss results of
+  Donohue and Sabbagh (2011) and Li et al. (2019) in
+  observational ADNI data. The general result, that
+  continuous repeated-measures analysis is more efficient
+  than time-to-event analysis of the same disease process,
+  is therefore not new. This paper's contribution is instead
+  a transparent, fully reported quantification of that
   efficiency gap for the specific combination of a staged
-  categorical instrument (CDR global stage, not a
-  continuous surrogate), a conversion-time endpoint, and
-  outcome-dependent dropout, which prior work has not
-  simulated under this precise combination.
+  categorical instrument (CDR global stage, not a continuous
+  surrogate), a conversion-time endpoint, and
+  outcome-dependent dropout, a combination prior work has
+  not simulated in this precise form.
 ---
 
 ```{r setup, include=FALSE}

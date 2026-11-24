@@ -27,37 +27,32 @@ header-includes:
   - \linenumbers
 knit: (function(input, ...) { d <- dirname(input); while (!file.exists(file.path(d, 'tools', 'stamp-render.R')) && d != dirname(d)) d <- dirname(d); source(file.path(d, 'tools', 'stamp-render.R'))$value(input) })
 abstract: |
-  Alzheimer's disease (AD) trials and oncology trials have
-  converged on divergent primary analyses of arguably
-  comparable disease processes: AD trials primarily use the
-  mixed model for repeated measures (MMRM) on a
-  change-from-baseline continuous endpoint, while oncology
-  trials primarily use Cox proportional hazards models on a
-  time-to-event endpoint. We review the regulatory and
-  empirical history behind this divergence. We then use a
-  Monte Carlo simulation, reported under the ADEMP framework
-  of Morris, White, and Crowther (2019), to quantify the
-  efficiency cost of expressing the same underlying disease
-  process, longitudinal Clinical Dementia Rating (CDR)
-  global-stage progression under realistic,
-  severity-dependent missing-at-random dropout, as a
-  time-to-conversion survival endpoint rather than a
-  continuous change score. Across 2,000 simulated trials of
-  200 participants per arm, we find that MMRM substantially
-  outperformed a Cox model applied to the same simulated
-  data on statistical power. This finding is consistent with
-  the analytic and empirical efficiency-loss results of
-  Donohue and Sabbagh (2011) and Li et al. (2019) in
-  observational ADNI data. The general result, that
-  continuous repeated-measures analysis is more efficient
-  than time-to-event analysis of the same disease process,
-  is therefore not new. This paper's contribution is instead
-  a transparent, fully reported quantification of that
-  efficiency gap for the specific combination of a staged
-  categorical instrument (CDR global stage, not a continuous
-  surrogate), a conversion-time endpoint, and
-  outcome-dependent dropout, a combination prior work has
-  not simulated in this precise form.
+  Alzheimer's disease (AD) trials and oncology trials
+  analyze progressive disease in different ways. AD trials
+  mainly use the mixed model for repeated measures (MMRM)
+  on change from baseline. Oncology trials mainly use Cox
+  proportional hazards models on time to an event. We
+  review the history behind this divergence. We then
+  report a Monte Carlo simulation under the ADEMP
+  framework of Morris, White, and Crowther (2019). A
+  latent severity score is mapped to the global Clinical
+  Dementia Rating (CDR) stage. Participants enter at CDR
+  0.5, and dropout rises with latent severity. Three
+  analyses are fit to the same simulated trials. They are
+  MMRMs on the latent score and on the observed stage, and
+  a Cox model for time to CDR 1.0 or higher. No trial
+  observes the latent score, so its MMRM serves only as an
+  approximate upper bound. Secondary scenarios add a null
+  effect, a smaller effect, completely random dropout, and
+  a range of sample sizes. In the primary scenario, power
+  was highest for the latent-score MMRM and lowest for the
+  Cox model. The general advantage of continuous over
+  time-to-event analysis is known from Donohue et al.
+  (2011) and Li et al. (2019). The contribution here is
+  narrower. The design separates the cost of a coarse
+  instrument from the cost of the time-to-event summary.
+  It does so under dropout that is informative for the Cox
+  model.
 ---
 
 ```{r setup, include=FALSE}
@@ -74,6 +69,12 @@ library(survival)
 library(nlme)
 library(MASS)
 
+sim_path <- file.path(
+  here::here(), "analysis", "scripts", "sim_study.R"
+)
+
+# The md5 of sim_study.R is part of every chunk's cache key, so an
+# edit to the simulation code invalidates cached results.
 opts_chunk$set(
   warning = FALSE,
   message = FALSE,
@@ -83,16 +84,22 @@ opts_chunk$set(
   results = "asis",
   dev = "pdf",
   cache = TRUE,
-  cache.path = "cache/"
+  cache.path = "cache/",
+  autodep = TRUE,
+  cache.extra = unname(tools::md5sum(sim_path))
 )
 options(scipen = 1, digits = 3)
 
-# Morris et al. (2019) §4.1: pin RNGkind and set the seed ONCE at the
-# start of the program.
+# Morris et al. (2019) section 4.1: pin RNGkind. Each simulation
+# chunk sets its own seed, so restoring one chunk from the cache does
+# not shift the random stream of the chunks after it. Each
+# replication has its own stream, so n_cores does not change results.
 RNGkind("L'Ecuyer-CMRG")
-set.seed(20260310)
+n_cores <- 8L
 
-source(file.path(
+source(sim_path)
+# A literal path, because knitr::purl() evaluates this call alone.
+knitr::read_chunk(file.path(
   here::here(), "analysis", "scripts", "sim_study.R"
 ))
 ```
@@ -102,212 +109,244 @@ source(file.path(
 ## The divergent paths of clinical trial analysis
 
 We begin with a simple observation. The statistical
-analysis of clinical trials has followed markedly
-different trajectories across therapeutic areas. In
-oncology, time-to-event endpoints analyzed by survival
-methods remain the regulatory gold standard. Overall
-survival serves as the definitive measure of treatment
-efficacy [@fda2018oncology; @fleming1996surrogate]. In
-contrast, Alzheimer's disease (AD) and other
-neurodegenerative disease trials have converged on
-change-from-baseline estimands. The mixed model for
-repeated measures (MMRM) serves as their primary analytic
-framework [@donohue2012mmrm; @mallinckrodt2003assessing].
-We note that this divergence is not an accident of
-history. It reflects, rather, fundamental differences in
-disease biology, regulatory philosophy, and the
-statistical properties of the available endpoints.
+analysis of clinical trials has taken quite different
+paths in different therapeutic areas. In oncology,
+time-to-event endpoints analyzed by survival methods
+remain the regulatory standard. Overall survival is the
+definitive measure of treatment efficacy
+[@fda2018oncology; @fleming1996surrogate]. Alzheimer's
+disease (AD) and other neurodegenerative disease trials,
+on the other hand, have converged on change-from-baseline
+estimands. The mixed model for repeated measures (MMRM) is
+their primary analytic framework
+[@donohue2012mmrm; @mallinckrodt2003assessing]. In our
+view the divergence owes at least as much to regulatory
+precedent as to differences in disease biology. It also
+reflects the statistical properties of the available
+endpoints. The review that follows is mainly a history of
+that precedent.
 
-We trace the historical developments that led to the
-current analytic conventions in each field. We then
+In this paper we trace the historical developments behind
+the current analytic conventions in each field. We then
 present a simulation study comparing MMRM and survival
-analysis applied to the same underlying disease process,
-using the Clinical Dementia Rating (CDR) scale as the
-primary measure.
+analysis on the same underlying disease process. The
+Clinical Dementia Rating (CDR) scale is the primary
+measure.
 
 ## Regulatory origins: the FDA dual-outcome requirement
 
-The regulatory framework for AD clinical trials was shaped
-decisively by the 1990 FDA guidelines authored by Paul
-Leber. These guidelines required demonstration of efficacy
-on two co-primary endpoints: one cognitive (such as the
-Alzheimer's Disease Assessment Scale-Cognitive Subscale,
-ADAS-Cog) and one global or functional measure
-[@leber1990guidelines; @rosen1984adas]. The rationale was
-straightforward. A statistically significant difference on
-a psychometric test alone might not reflect clinically
-meaningful change, so a second, independent measure of
-global function was needed to confirm relevance. This
-dual-outcome requirement established the precedent that AD
-trials would be evaluated on the magnitude and direction of
-change from baseline, rather than on the occurrence of
-discrete clinical events.
+The 1990 FDA guidelines written by Paul Leber were
+decisive in shaping the regulatory framework for AD
+clinical trials. These guidelines required evidence of
+efficacy on two co-primary endpoints. One was cognitive,
+such as the Alzheimer's Disease Assessment Scale-Cognitive
+Subscale (ADAS-Cog). The other was a global or functional
+measure [@leber1990guidelines; @rosen1984adas]. The
+rationale was straightforward. A statistically significant
+difference on a psychometric test alone might not reflect
+clinically meaningful change. A second, independent
+measure of global function was therefore needed to confirm
+relevance. This dual-outcome requirement set a precedent
+for how AD trials would be judged. Under it, trials would
+be evaluated on the magnitude and direction of change from
+baseline. The occurrence of discrete clinical events would
+not be the measure of benefit.
 
-The ADAS-Cog, developed by @rosen1984adas, and the CDR,
-codified by @morris1993cdr, became the two pillars of AD
-trial assessment. The CDR in particular provided both a
-global staging instrument (the global CDR score, ranging
-from 0 to 3) and a sum-of-boxes score (CDR-SB, ranging
-from 0 to 18). The latter offered a quasi-continuous
-measure of disease severity suitable for change-score
-analysis. The 2018 FDA guidance on early AD further
-reinforced the change-from-baseline paradigm, while
-allowing greater flexibility in endpoint selection for
-earlier disease stages [@fda2018earlyad].
+Two instruments became the pillars of AD trial assessment.
+These were the ADAS-Cog, developed by @rosen1984adas, and
+the CDR, codified by @morris1993cdr. The CDR in particular
+provided a global staging instrument, the global CDR
+score, with a range of 0 to 3. It also provided a
+sum-of-boxes score (CDR-SB) with a range of 0 to 18. The
+CDR-SB offered a quasi-continuous measure of disease
+severity suited to change-score analysis. The 2018 FDA
+guidance on early AD further reinforced the
+change-from-baseline paradigm. At the same time, it
+allowed more flexibility in endpoint selection for earlier
+disease stages [@fda2018earlyad].
 
 ## The fall of LOCF and the rise of MMRM
 
-Through the 1990s, the standard analytic approach for AD
-trials was last observation carried forward (LOCF)
-combined with analysis of covariance (ANCOVA) at the final
-time point. Under LOCF, a participant's last observed value
-is imputed for all subsequent missing visits, and the
-analysis proceeds as if no data were missing. This approach
-was computationally convenient and widely accepted by
-regulators. It rests, however, on the untenable assumption
-that a participant's trajectory would have remained flat
-from the time of dropout. That assumption is grossly
-violated in progressive diseases, where dropout is often
-driven by worsening symptoms.
+Through the 1990s, AD trials were usually analyzed with
+last observation carried forward (LOCF). This was combined
+with analysis of covariance (ANCOVA) at the final time
+point. Under LOCF, a participant's last observed value is
+imputed for all later missing visits. The analysis then
+proceeds as if no data were missing. The approach was
+computationally convenient and widely accepted by
+regulators. However, it rests on the untenable assumption
+of a flat trajectory after dropout. That assumption is
+badly violated in progressive diseases. In these diseases,
+dropout is often driven by worsening symptoms.
 
-The foundational work of @mallinckrodt2001dropout and
-@mallinckrodt2001typei demonstrated through simulation that
-LOCF produces substantially biased treatment effect
-estimates. It also inflates Type I error rates when
-dropout is differential between treatment arms. In a
-progressive disease like AD, placebo-arm participants tend
-to drop out at higher rates due to worsening. LOCF
-paradoxically imputes favorable values for the placebo
-group by freezing them at an earlier, less impaired state,
-thereby attenuating the estimated treatment effect.
-Conversely, if active-treatment participants drop out due
-to adverse events while still relatively well, LOCF
-preserves their favorable scores, inflating the apparent
-benefit.
+The foundational simulation work of
+@mallinckrodt2001dropout and @mallinckrodt2001typei showed
+that LOCF produces substantially biased estimates of
+treatment effect. LOCF also inflates Type I error rates
+when dropout differs between treatment arms. The direction
+of the bias depends on who leaves. Suppose that in a
+progressive disease like AD more placebo participants
+leave because of worsening. LOCF then freezes them at an
+earlier, less impaired state. As a result, the estimated
+treatment effect is attenuated. The opposite pattern is
+also common. In symptomatic trials such as those of
+cholinesterase inhibitors, the active arm often had more
+dropout because of adverse events. Those participants may
+leave while still relatively well. LOCF then preserves
+their favorable scores and inflates the apparent benefit.
 
 @mallinckrodt2003assessing and @mallinckrodt2003response
-extended this work by comparing LOCF to the mixed model
+extended this work by comparing LOCF with the mixed model
 for repeated measures (MMRM). MMRM uses all observed data
-under a likelihood-based framework that is valid when data
-are missing at random (MAR). Unlike LOCF, MMRM does not
-impute missing values. Instead, it borrows information
-from the observed correlation structure across time points
-to provide unbiased estimates under MAR.
+in a likelihood-based framework. This framework is valid
+when data are missing at random (MAR). Unlike LOCF, MMRM
+does not impute missing values. Instead, it borrows
+information from the observed correlation structure across
+time points. This gives unbiased estimates under MAR.
 @obrien2005semiparametric proposed alternative
-semi-parametric and non-parametric methods and found that
-MMRM performed comparably to their proposed approaches
-while making less restrictive assumptions.
-@molenberghs2004analyzing provided the theoretical
-underpinning for likelihood-based analyses of incomplete
-longitudinal data.
+semi-parametric and non-parametric methods. They found
+that MMRM performed comparably to their proposed
+approaches while making less restrictive assumptions.
+@molenberghs2004analyzing provided the theoretical basis
+for likelihood-based analyses of incomplete longitudinal
+data.
 
 By the mid-2000s, the weight of evidence against LOCF was
 overwhelming. The 2010 National Research Council panel
 report, commissioned by the FDA, formally recommended
 against single imputation methods. It endorsed
-likelihood-based and multiple imputation approaches as
-preferred alternatives instead [@nrc2010missing]. The
-ICH E9(R1) addendum on estimands further clarified the
-conceptual framework. It required explicit specification
-of the target estimand, including how intercurrent events
-such as treatment discontinuation are handled, before an
-analytic method is selected [@ich2019e9r1].
+likelihood-based and multiple imputation approaches as the
+preferred alternatives [@nrc2010missing]. The ICH E9(R1)
+addendum on estimands further clarified the conceptual
+framework. It required explicit specification of the
+target estimand before an analytic method is chosen. That
+specification includes how intercurrent events, such as
+treatment discontinuation, are handled [@ich2019e9r1].
 
 ## MMRM as the primary analysis in AD
 
 @donohue2012mmrm compared MMRM, slope models, and
 quadratic models across five AD Cooperative Study (ADCS)
-trials. MMRM treats time as categorical and imposes no
-parametric assumptions on the mean trajectory, and it
-provided robust estimates across a range of disease stages
-and trial durations. Continuous time (slope) models can be
-more statistically efficient when the linearity assumption
-holds. On the other hand, the unstructured mean of MMRM
-offers protection against model misspecification in a
-disease where trajectories are heterogeneous and
-potentially nonlinear. @wang2018dpm proposed a disease
-progression model (DPM) with proportional treatment
-effects and demonstrated power gains over MMRM in
-autosomal dominant AD. The DPM requires stronger parametric
-assumptions, however, that may limit generalizability.
+trials. MMRM treats time as categorical and makes no
+parametric assumptions about the mean trajectory. In their
+comparison it gave robust estimates across a range of
+disease stages and trial durations. Continuous-time
+(slope) models can be more statistically efficient when
+the linearity assumption holds. On the other hand, the
+unstructured mean of MMRM offers protection against model
+misspecification. Such protection is relevant in a disease
+with heterogeneous and potentially nonlinear trajectories.
+@wang2018dpm proposed a disease progression model (DPM)
+with proportional treatment effects. They showed power
+gains over MMRM in autosomal dominant AD. However, the DPM
+requires stronger parametric assumptions, and these may
+limit generalizability.
 
-Today, virtually every pivotal AD trial uses MMRM or a
-close variant as the pre-specified primary analysis. The
-aducanumab EMERGE and ENGAGE trials
-[@buddhaeberlein2022aducanumab] and the lecanemab Study
-201 [@dhadda2022lecanemab] all employed MMRM with change
-from baseline in CDR-SB as the primary endpoint. Sensitivity
-analyses from DPM and other longitudinal models were used
-to assess robustness.
+Many recent pivotal AD trials have used MMRM or a close
+variant as the pre-specified primary analysis. The
+aducanumab EMERGE and ENGAGE trials analyzed change from
+baseline in CDR-SB in this way
+[@buddhaeberlein2022aducanumab]. So did the phase 3
+lecanemab trial, Clarity AD [@vandyck2023lecanemab].
+The practice is not universal, however. The phase 2b
+lecanemab trial, Study 201, had a Bayesian analysis of
+change in ADCOMS at 12 months as its primary endpoint
+[@swanson2021lecanemab]. @dhadda2022lecanemab later
+examined whether its results were consistent across
+clinical measures and statistical methods. The donanemab
+trial TRAILBLAZER-ALZ 2 analyzed the integrated Alzheimer's
+Disease Rating Scale (iADRS) with a natural cubic spline
+model [@sims2023donanemab]. That trial also reported the
+risk of progression to the next global CDR stage, a
+time-to-event summary.
 
 ## Why survival analysis persists in oncology
 
-In oncology, the natural endpoint is death, and overall
-survival (OS) has served as the primary measure of
-treatment efficacy since the earliest cancer clinical
-trials. OS is binary, unambiguous, and universally
-meaningful. @fleming1996surrogate cautioned against
-replacing OS with surrogate endpoints unless rigorous
-validation criteria are met. The FDA has historically
-required OS data for full, as opposed to accelerated,
-approval of cancer drugs [@fda2018oncology]. Even when
-progression-free survival or response rate serves as the
-primary endpoint for accelerated approval, confirmatory
-trials typically require OS data as well.
+In oncology, the natural endpoint is death. Overall
+survival (OS) has been the primary measure of treatment
+efficacy since the earliest cancer clinical trials. Death
+is a binary, unambiguous, and universally meaningful
+event.
+@fleming1996surrogate cautioned against replacing OS with
+surrogate endpoints without meeting rigorous validation
+criteria. The FDA has historically required OS data for
+full approval of cancer drugs, as opposed to accelerated
+approval [@fda2018oncology]. Progression-free survival or
+response rate may be the primary endpoint for accelerated
+approval. Even then, confirmatory trials typically require
+OS data as well.
 
 The persistence of survival analysis in oncology reflects
-several features that distinguish it from AD. First, death
+several features that set it apart from AD. First, death
 is a clearly defined, irreversible event. Second, the
-proportional hazards framework is well understood and
-carries established regulatory precedent. Third, oncology
-has a tradition of interim analyses based on information
-fractions from event counts. Fourth, no continuous,
-validated severity measure exists that changes monotonically
-and is universally accepted across tumor types.
+proportional hazards framework is well understood and has
+established regulatory precedent. Third, oncology has a
+tradition of interim analyses based on information
+fractions from event counts. Fourth, oncology has no
+validated continuous severity measure that changes
+monotonically and is universally accepted across tumor
+types.
 
 ## Rate of change vs. time to event in AD
 
-CDR and similar scales can be used to define both change
-scores, amenable to MMRM, and threshold crossings, amenable
-to survival analysis. A natural question arises: what is
-the relative efficiency of these two approaches when
-applied to the same underlying data?
+The CDR and similar scales can define change scores, which
+suit MMRM. They can also define threshold crossings, which
+suit survival analysis. But how efficient is one approach
+relative to the other on the same underlying data?
+
+The question is not new to AD. Two of the larger
+Alzheimer's Disease Cooperative Study trials used
+time-to-event primary endpoints. The vitamin E and
+selegiline trial in moderate AD analyzed time to a
+composite of clinical milestones [@sano1997selegiline].
+The vitamin E and donepezil trial in amnestic MCI analyzed
+time to a diagnosis of AD [@petersen2005vitamine]. Data
+from the first of these trials were later reanalyzed as
+repeated measures, with attention to the missing data that
+such measures bring [@thomas2000longitudinal]. Milestone
+endpoints need long follow-up and many events. Perhaps for
+this reason, the field has since moved largely to change
+scores. The efficiency argument we examine here is one
+likely reason for that move.
 
 @donohue2011relative derived an analytic inflation factor
 comparing Cox proportional hazards models of time to a
 threshold with linear models of continuous outcomes. They
-demonstrated through simulation that linear models
-consistently yielded greater statistical power for
-detecting treatment effects in ADNI data. @li2019relative
-extended this work to presymptomatic AD and found that
-power was approximately doubled with repeated continuous
-measures compared to time-to-progression analysis.
-@jonsson2024progression introduced a progression model for
-repeated measures (PMRM) that expresses treatment effects
-in time units, namely days of delay, rather than CDR-SB
-points. This offers a clinically interpretable alternative
-while maintaining efficiency comparable to MMRM.
-@ito2014predicting modeled CDR-SB trajectories to predict
-time to clinically meaningful worsening in MCI patients.
-They found that the median time to a 1-point change was
-approximately 2 years, a finding that informs both trial
-duration and sample size planning.
+checked it by simulation from models fit to ADNI data. In
+their setting the linear models consistently gave greater
+power. @li2019relative extended this work to
+presymptomatic AD. They simulated continuous outcomes from
+a joint mixed model fit to ADNI and derived progression
+events from the same trajectories. Power was roughly
+doubled for the continuous analysis, including under
+informative missingness. @raket2022pmrm introduced the
+progression model for repeated measures (PMRM). The PMRM
+expresses treatment effects in time units, such as months
+of delay, and not in CDR-SB points.
+@jonsson2024progression applied it in AD and compared it
+with traditional methods. @ito2014predicting modeled
+CDR-SB trajectories to predict time to clinically
+meaningful worsening in MCI patients. Their estimates
+inform both trial duration and sample size planning.
 
 ## Present study
 
-Despite the theoretical and empirical evidence favoring
-continuous measures, the comparison between MMRM and
-survival analysis for AD endpoints has not, to the best of
-our knowledge, been systematically examined in a simulation
-that uses the global CDR as both a continuous outcome and
-the basis for a survival endpoint. That survival endpoint
-is defined by conversion from CDR 0.5 (MCI/very mild
-dementia) to CDR 1.0 or higher (mild dementia). We address
-this gap through a Monte Carlo simulation that generates
-realistic CDR trajectories under a plausible
-data-generating model. We then compare the statistical
-properties of MMRM and Cox regression applied to the same
-simulated trial data.
+Theoretical and empirical evidence favors continuous
+measures, and our simulation does not add a new general
+result. Its aim is narrower. We simulate a staged global
+CDR from a latent severity process, with an entry
+criterion of CDR 0.5 and severity-dependent dropout. The
+survival endpoint is conversion from CDR 0.5 (MCI or very
+mild dementia) to CDR 1.0 or higher (mild dementia). On
+the same simulated trials we fit three analyses. The
+first is an MMRM on the latent severity score. No trial
+observes this score, so it serves as an approximate upper
+bound. The
+second is an MMRM on the observed global CDR stage. The
+third is a Cox model for time to conversion. Comparing the
+first and second analyses shows the cost of a coarse
+instrument. Comparing the second and third shows the cost
+of the time-to-event summary on the same instrument.
 
 # Methods
 
@@ -316,45 +355,48 @@ simulated trial data.
 Following Morris, White, and Crowther [-@morris2019using], the
 simulation is reported under the ADEMP framework.
 
-- **Aims.** Compare the operating characteristics of an MMRM on
-  change-from-baseline in latent CDR versus a Cox proportional hazards
-  model on time to first CDR $\geq 1.0$, under an
-  Alzheimer's-disease DGM with informative dropout.
-- **Data-generating mechanism.** Mixed-effects model for latent CDR
-  trajectories with a discretized observed CDR and outcome-dependent
-  dropout; details below.
+- **Aims.** Compare three analyses of the same simulated
+  trials. Two are MMRMs, on change in a latent severity
+  score and on change in the observed global CDR stage.
+  The third is a Cox proportional hazards model for time
+  to first global CDR $\geq 1.0$.
+- **Data-generating mechanisms.** A mixed-effects model for
+  latent severity, discretized into global CDR stages, with
+  an entry criterion of CDR 0.5 and dropout; details below.
+  The primary mechanism is supplemented by three secondary
+  scenarios (null effect, smaller effect, and MCAR dropout)
+  and by a sweep over sample size.
 - **Estimands.**
-  (i) For MMRM: the treatment effect on change from baseline in
-  latent CDR at the LAST visit, expressed as the linear combination
-  $\beta_{\mathrm{trt}} + \beta_{\mathrm{trt:visit}_K}$.
-  (ii) For Cox: the log-hazard ratio for time to first CDR $\geq 1.0$.
-- **Methods.** MMRM via `nlme::gls` with unstructured covariance;
-  Cox via `survival::coxph`.
-- **Performance measures.** Bias, empirical SE, mean model SE, power,
-  coverage, and convergence rate, each reported with its Monte Carlo
-  SE per Morris Table 6. With $n_{\mathrm{sim}} = 2000$, the Monte
+  (i) For each MMRM: the difference between arms in mean
+  change from month 0 to month 30, expressed as the linear
+  combination $\beta_{\mathrm{trt}} + \beta_{\mathrm{trt:visit}_K}$.
+  (ii) For Cox: the log hazard ratio for time to first
+  CDR $\geq 1.0$. True values are given under 'Estimand
+  values' below.
+- **Methods.** MMRM via `nlme::gls` with unstructured
+  correlation and visit-specific variances; Cox via
+  `survival::coxph`.
+- **Performance measures.** Bias, empirical SE, mean model
+  SE, power (type I error under the null), coverage, and
+  convergence rate. Each carries its Monte Carlo SE per
+  Morris Table 6. With $n_{\mathrm{sim}} = 2000$, the Monte
   Carlo SE for power at $p = 0.5$ is
-  $\sqrt{0.5 \times 0.5 / 2000} = 0.011$; for coverage at $0.95$,
-  MCSE $\approx 0.005$.
+  $\sqrt{0.5 \times 0.5 / 2000} = 0.011$; for coverage at
+  $0.95$, MCSE $\approx 0.005$.
 
 ## Data generating model
 
 We simulate a two-arm, placebo-controlled trial with
-$n = 200$ participants per arm. All participants enter with
-a latent global CDR of 0.5 at randomization. We note that
-the current simulation code (`sim_trial()`,
-`analysis/scripts/sim_study.R`) does not generate a month-0
-(randomization) assessment. The first observed visit is at
-month 6, and the five assessment times are months 6, 12,
-18, 24, and 30 following randomization, spaced every 6
-months. The month-6 assessment serves as the baseline
-reference for computing change scores in the MMRM analysis.
-The MMRM estimand, described below, contrasts month 30
-against this month-6 reference, a 24-month span. The
-primary continuous outcome is the global CDR score observed
-at these five visits. The survival endpoint is time to
-conversion from CDR 0.5 to CDR $\geq$ 1.0, using the same
-visit-grid times.
+$n = 200$ participants per arm. Each candidate participant
+has a month-0 assessment, which serves as both screening
+and randomization visit. Only candidates whose observed
+global CDR at month 0 is 0.5 are enrolled. Others are
+screened out and replaced, and treatment is assigned after
+this step. Follow-up assessments occur at months 6, 12,
+18, 24, and 30. Both MMRM outcomes are change from
+month 0, a 30-month span. The survival endpoint is the
+first follow-up visit at which global CDR is 1.0 or
+higher.
 
 The latent continuous disease severity $Y_{ij}^*$ for
 participant $i$ at visit $j$ is modeled as:
@@ -365,37 +407,55 @@ Y_{ij}^* = \beta_0 + \beta_1 t_j + \beta_2 T_i
   + \epsilon_{ij}
 $$
 
-where $t_j$ is visit time in years, $T_i$ is the
-treatment indicator (0 = placebo, 1 = active), $b_{0i}$
-and $b_{1i}$ are participant-specific random intercepts
-and slopes drawn from a bivariate normal distribution,
-and $\epsilon_{ij} \sim N(0, \sigma^2)$ is residual error.
+where $t_j$ is visit time in years ($t_0 = 0$) and $T_i$
+is the treatment indicator (0 = placebo, 1 = active). The
+terms $b_{0i}$ and $b_{1i}$ are participant-specific random
+intercepts and slopes drawn from a bivariate normal
+distribution. Finally, $\epsilon_{ij} \sim N(0, \sigma^2)$
+is residual error. Since $\beta_2 = 0$, the arms do not
+differ at month 0.
 
-The observed global CDR is obtained by mapping $Y^*$ to
-the CDR staging categories {0, 0.5, 1, 2, 3} using fixed
-threshold parameters (`sim_study.R`, `sim_trial()`). These
-thresholds were chosen to yield plausible CDR-stage
+We obtain the observed global CDR by mapping $Y^*$ to the
+CDR staging categories {0, 0.5, 1, 2, 3}. The fixed
+thresholds are 0.25, 0.75, 1.5, and 2.5 (`sim_trial()`).
+These thresholds were chosen to give plausible CDR-stage
 proportions and conversion rates for an MCI-due-to-AD
-population. We note that these thresholds are a design
-choice of this simulation, not a value fit to, or formally
-calibrated against, an external dataset such as ADNI, and
-no such calibration exercise or dataset citation is
-provided. No sensitivity analysis on these thresholds has
-yet been conducted; we return to this limitation in the
+population. We note that the thresholds are a design
+choice of this simulation. They were not fit to, or
+formally calibrated against, an external dataset such as
+ADNI. No sensitivity analysis on these thresholds has yet
+been done. We return to this limitation in the
 Discussion.
+
+We should be clear about what the latent score is. No
+trial observes $Y^*$, and its residual SD of 0.1 is small
+relative to the spread of the random effects. An MMRM on
+$Y^*$ is therefore an analysis of a nearly noise-free
+continuous measure. We report it as an approximate upper
+bound on the power of a continuous analysis. It is not a model of a
+CDR-SB analysis, and CDR-SB is not simulated. The MMRM on
+the observed global stage is the comparison that a real
+trial could make. It uses the same five-level instrument as
+the Cox model.
+
+Screening rests on one noisy month-0 assessment. As a
+result, some enrolled participants are close to the
+CDR 1.0 threshold at entry and convert at the first
+follow-up visit. We report the share who do so in the
+Results.
 
 ## Parameter values
 
 We selected the simulation parameters to reflect plausible
 progression rates in a population with MCI due to AD
-(CDR 0.5 at baseline):
+(CDR 0.5 at entry):
 
 ```{r sim-params}
 params <- tibble::tribble(
   ~Parameter, ~Value, ~Description,
-  "$\\beta_0$", "0.5", "Baseline CDR (MCI)",
-  "$\\beta_1$", "0.30", "Annual rate, placebo (CDR/yr)",
-  "$\\beta_2$", "0.00", "Baseline treatment effect",
+  "$\\beta_0$", "0.5", "Mean latent score at month 0",
+  "$\\beta_1$", "0.30", "Annual rate, placebo (latent units/yr)",
+  "$\\beta_2$", "0.00", "Treatment effect at month 0",
   "$\\beta_3$", "-0.075",
     "Treatment x time (25\\% slowing)",
   "$\\sigma_b^2$ (intercept)", "0.04",
@@ -406,14 +466,16 @@ params <- tibble::tribble(
     "Intercept-slope correlation",
   "$\\sigma^2$", "0.01",
     "Residual variance",
+  "Entry criterion", "CDR 0.5",
+    "Observed global CDR at month 0",
   "Dropout rate", "15\\%/year",
-    "MAR dropout, severity-dependent"
+    "Base rate; scaled by severity (see text)"
 )
 kable(
   params,
   booktabs = TRUE,
   escape = FALSE,
-  caption = "Simulation parameter values."
+  caption = "Simulation parameter values (primary scenario)."
 ) |>
   kable_styling(
     latex_options = c("hold_position"),
@@ -421,196 +483,148 @@ kable(
   )
 ```
 
+## Dropout
+
+Dropout is monotone. Months 0 and 6 are always observed.
+After each follow-up visit $j$, a participant still in the
+trial leaves before the next visit with probability
+$1 - \exp\{-0.075\,[1 + 0.5\,(Y^*_{ij} - 0.5)]\}$. The base
+rate is therefore 15% per year, but the realized rate
+varies with severity and so differs by arm. We report the
+realized completion fractions in the Results.
+
+This dropout is missing at random given the latent score.
+For the MMRM on $Y^*$ it is therefore ignorable. It is not
+ignorable for the other two analyses. Neither the observed
+stage nor the time to conversion carries all the
+information on which dropout depends. In particular,
+censoring in the Cox model depends on severity within a
+stage. The independent-censoring assumption of the Cox
+model therefore fails [@kalbfleisch2002statistical], and
+the direction of any resulting bias is not obvious. The
+comparison under dropout is thus not symmetric. The MCAR
+scenario below removes this asymmetry.
+
+## Scenarios
+
+The primary scenario uses the values in Table
+\@ref(tab:sim-params). Three secondary scenarios each
+change one feature of it.
+
+- **Null.** $\beta_3 = 0$. Power is then the type I error
+  rate of each analysis.
+- **Smaller effect.** $\beta_3 = -0.0375$, a 12.5% slowing.
+  This value is illustrative. It was chosen to bring the
+  latent-score MMRM below its power ceiling.
+- **MCAR dropout.** The primary effect, with dropout at a
+  constant 15% per year that does not depend on severity.
+
+Each secondary scenario uses $R = 500$ replications at
+200 per arm. The Monte Carlo SE of a type I error rate
+near 0.05 is then about 0.010. No other factor (residual
+error, staging thresholds, trial duration) is varied. We
+return to this limitation in the Discussion.
+
 ## Design specifications
 
 - **Sample size:** 200 per arm (400 total)
-- **Visit schedule:** Months 6, 12, 18, 24, and 30
-  following randomization (five assessments; no month-0
-  record is generated by the current code, so month 6 is
-  the earliest observed value and serves as the baseline
-  reference)
-- **Survival endpoint:** Time from randomization to first
-  visit with global CDR $\geq$ 1.0
-- **MMRM endpoint:** Change from the month-6 reference to
-  month 30 (a 24-month span)
-- **Treatment effect:** 25% slowing of progression
-  (nominal hazard ratio target 0.75 for the survival
-  endpoint; see the discussion of the Cox truth value
-  below for how this target relates to the underlying
-  data-generating parameters)
+- **Visit schedule:** Month 0 (screening and
+  randomization), then months 6, 12, 18, 24, and 30.
+- **Survival endpoint:** Time from randomization to the
+  first follow-up visit with global CDR $\geq$ 1.0
+- **MMRM endpoints:** Change from month 0 to month 30 in
+  the latent score and in the observed global CDR stage
+- **Treatment effect:** 25% slowing of latent progression
+  ($\beta_3 = -0.075$)
 
-## Note on the Cox truth value
+## Estimand values
 
-This point warrants emphasis. The hazard ratio of 0.75 used
-to compute Cox model bias and coverage
-(`true_cox = log(0.75)` in `summarize_results()`) is a
-nominal design target. It is asserted from the 25% slowing
-parameterization of the mean-model slope, not a value
-analytically derived from, or numerically calibrated to,
-the full data-generating mechanism. The observed CDR is a
-staged, threshold-discretized transformation of a bivariate
-random-intercept/random-slope process with
-severity-dependent MAR dropout. Because of this, the
-marginal hazard ratio implied by this design is not, in
-general, a simple function of the linear slope-reduction
-parameter $\beta_3$, and the DGM is not proportional-hazards
-by construction. The small observed Cox "bias" reported
-below is consistent with 0.75 being a close approximation
-for this specific parameterization. That consistency,
-however, does not constitute a derivation: a nominal target
-validated only by the smallness of the resulting discrepancy
-is circular reasoning, and we flag it as problematic.
-Readers should therefore interpret the reported Cox "bias"
-and "coverage" as the estimator's behavior relative to a
-stated nominal design target, not as bias against an
-independently derived ground truth. A rigorous derivation,
-for instance a high-replication run with no MAR dropout and
-continuous CDR resolution, or numerical integration of the
-DGM, is left for future work.
+```{r targets}
+set.seed(20260309)
+targets <- large_sample_targets(n_per_arm = 2e5)
+```
+
+The latent-score MMRM estimand is
+$\beta_3 \times 2.5 = -0.1875$ by construction. That is,
+month 0 precedes randomization, so the arms differ in mean
+change at month 30 by the slope difference times
+2.5 years. Adjusting for the month-0 value does not change
+this target. The other two estimands have no closed form
+under this mechanism. We compute them from one very large
+simulated trial (200,000 per arm) with no dropout
+(`large_sample_targets()`). For the observed stage, the
+target is the difference between arms in mean change in
+global CDR from month 0 to month 30. It is
+`r sprintf('%.4f', targets[['mmrm_cdr']])`. For the Cox
+model, the target is the large-sample limit of the
+estimated log hazard ratio,
+`r sprintf('%.4f', targets[['cox']])` (SE
+`r sprintf('%.4f', targets[['cox_se']])`). The DGM does
+not have proportional hazards. This limit is therefore a
+population-averaged summary under this design, not a
+structural parameter. As a check, the same large trial
+gives a latent-score difference of
+`r sprintf('%.4f', targets[['mmrm']])`. Under the null
+scenario all three targets are zero.
 
 ## Simulation procedure
 
+The data-generating function, read directly from
+`analysis/scripts/sim_study.R`, is shown below.
+
 ```{r sim-function, echo=TRUE, eval=FALSE}
-sim_trial <- function(n_per_arm = 200,
-                      n_visits = 5,
-                      beta = c(0.5, 0.30, 0, -0.075),
-                      sigma_b = matrix(
-                        c(0.04, 0.3 * sqrt(0.04 * 0.02),
-                          0.3 * sqrt(0.04 * 0.02), 0.02),
-                        2, 2
-                      ),
-                      sigma_e = 0.1,
-                      dropout_rate = 0.15) {
-  n <- 2 * n_per_arm
-  trt <- rep(0:1, each = n_per_arm)
-  times <- seq(0.5, 2.5, by = 0.5)
-
-  re <- MASS::mvrnorm(n, mu = c(0, 0), Sigma = sigma_b)
-
-  records <- list()
-  for (i in seq_len(n)) {
-    y_star <- numeric(n_visits)
-    dropped <- FALSE
-    for (j in seq_len(n_visits)) {
-      if (dropped) next
-      t_j <- times[j]
-      mu_ij <- beta[1] + beta[2] * t_j +
-        beta[3] * trt[i] + beta[4] * (t_j * trt[i]) +
-        re[i, 1] + re[i, 2] * t_j
-      y_star[j] <- mu_ij + rnorm(1, 0, sigma_e)
-      cdr_obs <- cut(
-        y_star[j],
-        breaks = c(-Inf, 0.25, 0.75, 1.5, 2.5, Inf),
-        labels = c(0, 0.5, 1, 2, 3)
-      )
-      cdr_obs <- as.numeric(as.character(cdr_obs))
-      p_drop <- 1 - exp(-dropout_rate * 0.5 *
-        (1 + 0.5 * (y_star[j] - 0.5)))
-      if (runif(1) < p_drop) dropped <- TRUE
-      records[[length(records) + 1]] <- data.frame(
-        id = i, trt = trt[i], visit = j,
-        time = t_j, y_star = y_star[j],
-        cdr = cdr_obs
-      )
-    }
-  }
-  do.call(rbind, records)
-}
 ```
 
-For each of $R = 2000$ replications, we proceed as follows.
+For each replication, we proceed as follows.
 
-1. Generate a complete trial dataset using the model above.
-2. Apply severity-dependent MAR dropout.
-3. Fit an MMRM to the change from baseline in the latent
-   CDR score, with treatment, visit, treatment-by-visit
-   interaction, and baseline score as covariates, using an
-   unstructured covariance matrix.
+1. Screen candidates and generate a trial dataset with
+   dropout, using the model above.
+2. Fit an MMRM to the change from month 0 in the latent
+   score. The covariates are treatment, visit,
+   treatment-by-visit interaction, the month-0 score, and
+   the month-0-by-visit interaction.
+3. Fit the same MMRM to the change from month 0 in the
+   observed global CDR stage. All participants are at
+   stage 0.5 at month 0, so there is no baseline covariate.
 4. Fit a Cox proportional hazards model to time to first
    CDR $\geq$ 1.0, with treatment as the sole covariate.
 5. Record the treatment effect estimate, standard error,
-   p-value, and 95% confidence interval from each model.
+   and p-value from each model, together with the event
+   and completion fractions by arm.
 
 ## Analysis plan
 
+The analysis functions, again read from `sim_study.R`, are
+shown below.
+
 ```{r analysis-functions, echo=TRUE, eval=FALSE}
-# The estimand is the treatment effect at the LAST visit, expressed
-# as beta_trt + beta_{trt:visit_f_last}. Earlier versions picked the
-# `trt` main effect alone, which under the `trt * visit_f`
-# parameterization corresponds to the effect at the REFERENCE visit,
-# not the final visit.
-#
-# `baseline` is defined as the first OBSERVED value (month 6 on the
-# current visit grid; see Design specifications above), and that
-# reference visit is then dropped (`filter(visit > 1)`) before
-# fitting, since its own change score is identically zero.
-fit_mmrm <- function(dat) {
-  dat <- dat |>
-    group_by(id) |>
-    mutate(
-      baseline = y_star[visit == min(visit)],
-      change = y_star - baseline
-    ) |>
-    ungroup() |>
-    filter(visit > 1) |>
-    mutate(visit_f = factor(visit))
-
-  mod <- tryCatch(
-    nlme::gls(
-      change ~ trt * visit_f + baseline,
-      data = dat,
-      correlation = nlme::corSymm(form = ~ 1 | id),
-      weights = nlme::varIdent(form = ~ 1 | visit_f),
-      na.action = na.omit,
-      control = nlme::glsControl(maxIter = 200, opt = "optim")
-    ),
-    error = function(e) NULL
-  )
-  if (is.null(mod)) return(c(est = NA, se = NA, p = NA))
-
-  # Convergence diagnostic: `mod$apVar` is a character message
-  # (not a matrix) when the Hessian is not positive definite, and
-  # `numIter >= maxIter` signals the optimizer did not converge.
-  apvar_ok <- is.matrix(mod$apVar)
-  iter_ok <- is.null(mod$numIter) || mod$numIter < 200
-  if (!apvar_ok || !iter_ok) return(c(est = NA, se = NA, p = NA))
-
-  tt <- summary(mod)$tTable
-  last_visit_level <- max(levels(dat$visit_f))
-  L <- rep(0, nrow(tt))
-  names(L) <- rownames(tt)
-  L["trt"] <- 1
-  L[paste0("trt:visit_f", last_visit_level)] <- 1
-  est <- sum(L * tt[, "Value"])
-  se <- sqrt(as.numeric(t(L) %*% vcov(mod) %*% L))
-  p <- 2 * pnorm(-abs(est / se))
-  c(est = est, se = se, p = p)
-}
-
-fit_cox <- function(dat) {
-  surv_dat <- dat |>
-    group_by(id) |>
-    summarise(
-      trt = first(trt),
-      event_time = {
-        conv <- which(cdr >= 1)
-        if (length(conv) > 0) time[conv[1]] else max(time)
-      },
-      event = as.numeric(any(cdr >= 1)),
-      .groups = "drop"
-    )
-  mod <- coxph(
-    Surv(event_time, event) ~ trt,
-    data = surv_dat
-  )
-  s <- summary(mod)
-  c(
-    est = coef(mod),
-    se = s$coefficients[, "se(coef)"],
-    p = s$coefficients[, "Pr(>|z|)"]
-  )
-}
 ```
+
+In ICH E9(R1) terms [@ich2019e9r1], the MMRM estimands
+have four parts. The population is screened participants at
+global CDR 0.5. The variable is change from month 0 to
+month 30, in the latent score or in the observed stage.
+Dropout is the intercurrent event. It is handled under a
+hypothetical strategy, that is, the outcome had the
+participant stayed in the trial. The likelihood-based MMRM
+targets this under MAR. The summary measure is the
+difference in means between arms. For the Cox model, the
+variable is time to first observed CDR $\geq 1.0$, dropout
+is treated as censoring, and the summary is the hazard
+ratio.
+
+Two details of the MMRM deserve mention. First, the
+p-value uses a normal reference distribution (a Wald $z$
+test). With 400 participants this is adequate. We did not
+use Kenward-Roger or Satterthwaite degrees of freedom.
+Second, the month-0 value is measured before
+randomization. As a covariate it improves precision
+without changing the target. Its coefficient is allowed
+to differ by visit. Under random slopes the regression of
+change on the month-0 value is not the same at every
+visit. A single pooled coefficient would misspecify the
+mean model, and under outcome-dependent dropout that can
+bias the treatment contrast.
 
 ## Reproducibility and data/code availability
 
@@ -620,42 +634,35 @@ data are used or accessed. The simulation code
 `analysis/scripts/01_run_simulation.R`,
 `analysis/scripts/02_power_vs_n.R`) and this manuscript
 source (`analysis/report/report.Rmd`) are versioned in the
-`mmrmsurvival` research compendium alongside an `renv.lock`
-pinning package versions.
+`mmrmsurvival` research compendium. The compendium also
+holds an `renv.lock` file pinning package versions.
 
-We re-audited this simulation against the Morris, White,
-and Crowther [-@morris2019using] ADEMP reporting standards
-as of this revision. This audit supersedes the 2026-04-17
-audit recorded at `docs/morris-audit-2026-04-17.md`, whose
-findings no longer describe the current code or report. As
-currently implemented, four points are worth noting. First,
-every report chunk that produces a manuscript number or
-figure runs with `eval=TRUE` on each render, so the
-reported results are generated by the rendered document
-itself, not pre-computed and pasted in. Second, the MMRM
-estimand is extracted via an explicit named linear
-combination (`L["trt"] + L["trt:visit_f<last>"]`) with no
-pattern-matching fallback, so the treatment effect cannot
-be silently mislabeled. Third, every reported performance
-measure (bias, empirical SE, power, coverage) carries a
-Monte Carlo SE computed per Morris et al. Table 6
-(`summarize_results()`). Fourth, the RNG kind is pinned
-(`L'Ecuyer-CMRG`) and the master seed is set once, with
-per-replication RNG states retained as an attribute of the
-simulation output for diagnostic reproducibility. We note
-that two ADEMP elements remain only partially met. The
-factorial design is not fully labeled as a scenario grid:
-the $n$-sweep in Figure \@ref(fig:power-comparison) is
-documented above but runs as a separate script rather than
-a declared factor in the primary $R = 2000$ design. In
-addition, no sensitivity analysis on the CDR staging
-thresholds or the dropout-severity coupling coefficient has
-yet been conducted (see Discussion). The simulation is
-otherwise ADEMP-compliant as of this revision; it was not
-compliant as of the superseded April audit.
+The functions printed above are read from `sim_study.R`
+with `knitr::read_chunk()` when the document is rendered.
+The printed code is therefore the code that runs. Every
+number, table, and figure in the Results is computed
+during the render, and none is read from a stored file.
+Chunk results are cached. The cache key of every chunk
+includes an md5 checksum of `sim_study.R`, so any change
+to the simulation code forces the results to be
+recomputed. The RNG kind is pinned to `L'Ecuyer-CMRG`.
+Each simulation chunk sets its own seed, so restoring one
+chunk from the cache does not change the random numbers
+used by later chunks. Each replication has its own
+L'Ecuyer stream, derived in sequence from the chunk seed.
+Replications run in parallel on `r n_cores` cores, and the
+results do not depend on the number of cores. A full
+render runs about 4,500 replications and takes
+substantial time.
 
-The R session used for the primary $R = 2000$ run recorded
-in this report is as follows.
+Two ADEMP elements are only partly met. First, the
+secondary scenarios each change one factor, and they do
+not form a full factorial design. Second, the residual
+error, the staging thresholds, the dropout-severity
+coupling, and the trial duration are fixed (see
+Discussion).
+
+The R session used for the render is as follows.
 
 ```{r session-info, echo=FALSE}
 si <- utils::sessionInfo()
@@ -675,32 +682,26 @@ for (p in pkgs) {
 
 In addition to the primary $n = 200$, $R = 2000$ design
 above, Figure \@ref(fig:power-comparison) reports power as
-a function of per-arm sample size from a separate,
-lower-precision sweep. **Aims:** illustrate how the
-MMRM-versus-Cox power gap changes with sample size, for
-trial-planning purposes. **Data-generating mechanism:**
-identical to the primary design (`sim_trial()`), varying
-only $n_{\mathrm{per\,arm}}$. **Estimands and methods:**
-identical to the primary design. **Performance measure:**
-power only, with its Monte Carlo SE. **$n$ grid:**
+a function of per-arm sample size. These results come from
+a separate, lower-precision sweep. **Aims:** illustrate
+how the power of the three analyses changes with sample
+size, for trial-planning purposes. **Data-generating
+mechanism:** identical to the primary design
+(`sim_trial()`), varying only $n_{\mathrm{per\,arm}}$.
+**Estimands and methods:** identical to the primary
+design. **Performance measure:** power only, with a
+95% Wilson interval. **$n$ grid:**
 $n_{\mathrm{per\,arm}} \in \{100, 150, 200, 300, 400\}$, at
-$R = 200$ replications per cell (`02_power_vs_n.R`, seed
-20260511, distinct from the primary analysis's seed
-20260310). We note that at $R = 200$, the Monte Carlo SE for
-power near 0.5 is $\sqrt{0.25/200} \approx 0.035$, roughly
-three times the primary analysis's precision at $R = 2000$
-($\sqrt{0.25/2000} \approx 0.011$). The sweep is therefore
-suitable for the qualitative pattern shown in
-Figure \@ref(fig:power-comparison) but not for precise
-point estimates at any single $n$. The cached sweep output
-(`analysis/data/sim_power_vs_n.rds`) is a build
-prerequisite. The figure-producing chunk now stops the
-render with an explicit error if that file is absent,
-rather than silently substituting placeholder text, so a
-missing sweep cannot go unnoticed at submission. To
-regenerate it, run
-`Rscript analysis/scripts/02_power_vs_n.R` from the package
-root before rendering.
+$R = 200$ replications per cell (`run_power_sweep()`,
+seed 20260511). At $R = 200$, the Monte Carlo SE for
+power near 0.5 is $\sqrt{0.25/200} \approx 0.035$. That is
+roughly three times the primary analysis's value at
+$R = 2000$ ($\sqrt{0.25/2000} \approx 0.011$). The sweep is
+therefore suitable for the qualitative pattern shown in
+Figure \@ref(fig:power-comparison). It is not suitable for
+precise point estimates at any single $n$. The same sweep
+can be run outside the report with
+`Rscript analysis/scripts/02_power_vs_n.R`.
 
 ## Performance metrics
 
@@ -714,67 +715,129 @@ For each method, we compute:
 - **Coverage:** Proportion of 95% CIs containing the true
   value
 - **Convergence rate:** Proportion of replications
-  producing valid estimates, where "valid" for the MMRM
+  producing valid estimates. For the MMRM, 'valid'
   requires both no thrown fitting error and genuine
-  optimizer convergence (a positive-definite approximate
-  Hessian, `mod$apVar`, and an iteration count below the
-  `maxIter` cap), not merely the absence of an R error
+  optimizer convergence. Convergence here means a
+  positive-definite approximate Hessian (`mod$apVar`) and
+  an iteration count below the `maxIter` cap. The absence
+  of an R error alone is not sufficient.
 
 # Results
 
-```{r run-simulation, cache=TRUE, eval=TRUE}
-# Uses the canonical `run_simulation()` sourced from sim_study.R. The
-# master seed is set once in the setup chunk above; per-replicate RNG
-# states are attached as an attribute for diagnostic reproducibility.
+**TODO (author, before submission):** the ordering of
+power stated in the abstract was checked only on a reduced
+run (80 replications, primary scenario). Confirm it against the
+rendered Table \@ref(tab:summary-table) and Table
+\@ref(tab:scenario-table), then delete this note.
+
+```{r run-simulation}
+set.seed(20260310)
 n_reps <- 2000
-sim_results <- run_simulation(n_reps = n_reps)
+sim_results <- run_simulation(n_reps = n_reps, n_cores = n_cores)
 ```
+
+```{r run-scenarios}
+set.seed(20260312)
+n_reps_scen <- 500
+beta_small <- c(0.5, 0.30, 0, -0.0375)
+scen_args <- list(
+  "Null" = list(beta = c(0.5, 0.30, 0, 0)),
+  "Smaller effect" = list(beta = beta_small),
+  "MCAR dropout" = list(dropout = "mcar")
+)
+scen_results <- purrr::map(scen_args, \(a) {
+  do.call(
+    run_simulation,
+    c(list(n_reps = n_reps_scen, n_cores = n_cores), a)
+  )
+})
+set.seed(20260313)
+targets_small <- large_sample_targets(
+  n_per_arm = 2e5, beta = beta_small
+)
+```
+
+```{r run-sweep}
+set.seed(20260511)
+power_results <- run_power_sweep(
+  sample_sizes = c(100, 150, 200, 300, 400),
+  n_reps = 200,
+  n_cores = n_cores
+)
+```
+
+```{r headline-13, include=FALSE}
+summary_tab <- summarize_results(sim_results, truth = targets)
+row_of <- function(tab, m) tab[tab$method == method_labels[[m]], ]
+lat_row <- row_of(summary_tab, "mmrm")
+cdr_row <- row_of(summary_tab, "mmrm_cdr")
+cox_row <- row_of(summary_tab, "cox")
+desc <- colMeans(sim_results[, c(
+  "ev_pbo", "ev_act", "ev1_pbo", "ev1_act", "comp_pbo", "comp_act"
+)])
+pct <- function(x) sprintf("%.0f%%", 100 * x)
+f3 <- function(x) sprintf("%.3f", x)
+```
+
+## The simulated population
+
+We begin with the simulated population, since it bears on
+the Cox results. We first consider conversion to
+CDR $\geq 1.0$ during follow-up. In the primary scenario,
+the mean share converting was `r pct(desc[["ev_pbo"]])` in the placebo arm
+and `r pct(desc[["ev_act"]])` in the active arm. Without
+dropout, the corresponding shares in the large trial were
+`r pct(targets[["ev_pbo"]])` and
+`r pct(targets[["ev_act"]])`. Conversion is therefore
+common in this design, and censoring is light. A sizeable
+part of it occurs early.
+`r pct(desc[["ev1_pbo"]])` of placebo and
+`r pct(desc[["ev1_act"]])` of active participants converted
+at the first follow-up visit, month 6. At that visit the
+expected latent difference between arms is only
+$-0.0375$. These early conversions depend mainly on where
+participants sat within the CDR 0.5 band at entry. The
+small early treatment difference shifts them only
+slightly. The
+share completing the month-30 visit was
+`r pct(desc[["comp_pbo"]])` (placebo) and
+`r pct(desc[["comp_act"]])` (active). The base rate of
+15% per year alone would give about 74%. The severity
+coupling lowers this in both arms, more so in the placebo
+arm, whose participants are more severe on average.
 
 ## Headline findings
 
-```{r headline-13, include=FALSE}
-summary_tab <- summarize_results(
-  sim_results,
-  true_mmrm = -0.075 * 2,
-  true_cox = log(0.75)
-)
-mmrm_row <- summary_tab[summary_tab$method == "MMRM", ]
-cox_row <- summary_tab[summary_tab$method == "Cox", ]
-```
+The latent-score MMRM had bias `r f3(lat_row$bias)` (MCSE
+`r f3(lat_row$mcse_bias)`) against its target of
+$-0.1875$, empirical SE `r f3(lat_row$emp_se)`, and
+coverage `r f3(lat_row$coverage)`. The MMRM on the
+observed stage had bias `r f3(cdr_row$bias)` (MCSE
+`r f3(cdr_row$mcse_bias)`) against its target of
+`r sprintf('%.4f', targets[['mmrm_cdr']])`, and coverage
+`r f3(cdr_row$coverage)`. The Cox estimator had bias
+`r f3(cox_row$bias)` (MCSE `r f3(cox_row$mcse_bias)`)
+against its large-sample limit of
+`r sprintf('%.4f', targets[['cox']])`, and coverage
+`r f3(cox_row$coverage)`. The two estimands that are not
+the latent score are analyzed under dropout that is not
+ignorable for them. Their bias and coverage should be read
+in that light.
 
-Under the data-generating model (true MMRM effect
-$= -0.15$; Cox nominal design target log-hazard ratio
-$= \log 0.75 \approx -0.288$, not an analytically derived
-DGM truth value, per the note above), the MMRM estimator
-recovered its estimand with bias
-`r sprintf('%.3f', mmrm_row$bias)` (MCSE
-`r sprintf('%.3f', mmrm_row$mcse_bias)`), empirical SE
-`r sprintf('%.3f', mmrm_row$emp_se)`, power
-`r sprintf('%.3f', mmrm_row$power)`, and coverage
-`r sprintf('%.3f', mmrm_row$coverage)`. The Cox model's
-log-hazard-ratio estimator had a mean difference from the
-nominal target of
-`r sprintf('%.3f', cox_row$bias)` (MCSE
-`r sprintf('%.3f', cox_row$mcse_bias)`), empirical SE
-`r sprintf('%.3f', cox_row$emp_se)`, power
-`r sprintf('%.3f', cox_row$power)`, and coverage
-`r sprintf('%.3f', cox_row$coverage)`. We note that this
-last figure reflects coverage of the nominal target, not
-of an independently derived truth. Convergence was
-`r sprintf('%.3f', mmrm_row$convergence)` for MMRM and
-`r sprintf('%.3f', cox_row$convergence)` for Cox across
-`r mmrm_row$n_valid` valid replications per method. The
-MMRM convergence rate now also requires a positive-definite
-approximate Hessian and an optimizer that did not exhaust
-its iteration limit (`fit_mmrm()`,
-`analysis/scripts/sim_study.R`), not merely the absence of
-a thrown error. Both estimands use the Morris Table 6 Monte
-Carlo SEs reported in Table 1 below.
+Power was `r f3(lat_row$power)` for the latent-score MMRM,
+`r f3(cdr_row$power)` for the MMRM on the observed stage,
+and `r f3(cox_row$power)` for the Cox model (MCSE at most
+`r f3(max(summary_tab$mcse_power))`). The latent-score
+MMRM sits at or near the power ceiling, so a ratio of its
+power to that of the Cox model carries little
+information. The comparison of interest is between the two
+analyses of the observed stage. Convergence was
+`r f3(lat_row$convergence)`, `r f3(cdr_row$convergence)`,
+and `r f3(cox_row$convergence)` respectively, over
+`r n_reps` replications. All Monte Carlo SEs are listed in
+Table \@ref(tab:summary-table).
 
-## Summary statistics
-
-```{r summary-table, eval=TRUE}
-
+```{r summary-table}
 kable(
   summary_tab,
   booktabs = TRUE,
@@ -786,9 +849,10 @@ kable(
     "Convergence"
   ),
   caption = paste(
-    "Simulation results: MMRM vs Cox regression",
-    "(2000 replications). Monte Carlo SEs per Morris",
-    "et al. (2019) Table 6."
+    "Primary scenario: performance of the three analyses",
+    "(2000 replications, 200 per arm). Bias and coverage",
+    "are relative to the estimand values in Methods.",
+    "Monte Carlo SEs per Morris et al. (2019) Table 6."
   )
 ) |>
   kable_styling(
@@ -797,156 +861,226 @@ kable(
   )
 ```
 
-## Figures
+## Secondary scenarios
 
-```{r power-comparison, eval=TRUE, fig.cap="Empirical power as a function of per-arm sample size for MMRM and Cox proportional hazards, at 200 replicates per cell. MMRM uniformly dominates Cox across the explored range, with the gap widest at $n_{\\mathrm{per\\,arm}} = 100$."}
-power_path <- file.path(
-  here::here(), "analysis", "data", "sim_power_vs_n.rds"
+```{r scenario-table}
+scen_truth <- list(
+  "Null" = c(mmrm = 0, mmrm_cdr = 0, cox = 0),
+  "Smaller effect" = targets_small,
+  "MCAR dropout" = targets
 )
-if (!file.exists(power_path)) {
-  stop(
-    "sim_power_vs_n.rds not found at ", power_path, ". ",
-    "Run `Rscript analysis/scripts/02_power_vs_n.R` from the ",
-    "package root before rendering this report; see Methods, ",
-    "'Sample-size sweep'."
+scen_tab <- purrr::imap_dfr(scen_results, \(res, nm) {
+  s <- summarize_results(res, truth = scen_truth[[nm]])
+  tibble::tibble(
+    Scenario = nm, Method = s$method,
+    Bias = s$bias, Power = s$power,
+    `MCSE(power)` = s$mcse_power, Coverage = s$coverage
   )
+})
+scen_row <- function(sc, m) {
+  scen_tab[scen_tab$Scenario == sc &
+             scen_tab$Method == method_labels[[m]], ]
 }
-{
-  power_results <- readRDS(power_path)
-  power_results$method <- ifelse(
-    power_results$method == "Cox", "Cox PH", power_results$method
+kable(
+  scen_tab,
+  booktabs = TRUE,
+  digits = 3,
+  caption = paste(
+    "Secondary scenarios (500 replications each, 200 per",
+    "arm). Under the null, power is the type I error rate."
   )
-  ggplot(power_results, aes(x = n, y = power,
-      linetype = method, shape = method, group = method)) +
-    geom_line() +
-    geom_point(size = 2) +
-    geom_errorbar(
-      aes(ymin = pmax(0, power - 1.96 * mcse_power),
-          ymax = pmin(1, power + 1.96 * mcse_power)),
-      width = 8
-    ) +
-    scale_linetype_manual(values = c("solid", "dashed")) +
-    scale_shape_manual(values = c(16, 17)) +
-    scale_y_continuous(limits = c(0, 1)) +
-    labs(
-      x = "Sample size per arm",
-      y = "Power",
-      linetype = "Method",
-      shape = "Method"
-    ) +
-    theme_minimal(base_size = 10) +
-    theme(legend.position = "bottom")
-}
+) |>
+  kable_styling(latex_options = "hold_position", font_size = 8)
 ```
 
-```{r density-plot, eval=TRUE, fig.cap="Distribution of per-replication treatment-effect estimates across 2,000 simulated trials at $n_{\\mathrm{per\\,arm}} = 200$, standardized to each replication's own estimate-divided-by-model-SE (a Wald z statistic) so that the MMRM (continuous CDR-SB rate) and Cox (log hazard ratio) estimands, which are on different raw scales, can be compared on a common, unit-free axis."}
+Table \@ref(tab:scenario-table) gives the secondary
+scenarios. We begin with the null scenario. There, the
+type I error rate was
+`r f3(scen_row("Null", "mmrm")$Power)` for the
+latent-score MMRM, `r f3(scen_row("Null", "mmrm_cdr")$Power)`
+for the MMRM on the observed stage, and
+`r f3(scen_row("Null", "cox")$Power)` for the Cox model.
+Each has a Monte Carlo SE of about 0.010 at a true rate of
+0.05. With the smaller effect, power was
+`r f3(scen_row("Smaller effect", "mmrm")$Power)`,
+`r f3(scen_row("Smaller effect", "mmrm_cdr")$Power)`, and
+`r f3(scen_row("Smaller effect", "cox")$Power)` in the same
+order. With MCAR dropout and the primary effect, it was
+`r f3(scen_row("MCAR dropout", "mmrm")$Power)`,
+`r f3(scen_row("MCAR dropout", "mmrm_cdr")$Power)`, and
+`r f3(scen_row("MCAR dropout", "cox")$Power)`.
+
+## Figures
+
+```{r power-comparison, fig.cap="Empirical power as a function of per-arm sample size for the three analyses, at 200 replicates per cell. Error bars are 95\\% Wilson intervals."}
+plot_dat <- power_results |>
+  dplyr::mutate(
+    lower = wilson_ci(power, n_valid)[, "lower"],
+    upper = wilson_ci(power, n_valid)[, "upper"]
+  )
+ggplot(plot_dat, aes(x = n, y = power,
+    linetype = method, shape = method, group = method)) +
+  geom_line() +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 8) +
+  scale_linetype_manual(values = c("solid", "dashed", "dotted")) +
+  scale_shape_manual(values = c(16, 17, 15)) +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(
+    x = "Sample size per arm",
+    y = "Power",
+    linetype = "Method",
+    shape = "Method"
+  ) +
+  theme_minimal(base_size = 10) +
+  theme(legend.position = "bottom", legend.direction = "vertical")
+```
+
+```{r density-plot, fig.cap="Distribution of per-replication Wald z statistics (estimate divided by model SE) across 2,000 simulated trials at $n_{\\mathrm{per\\,arm}} = 200$. The three estimands are on different scales (change in latent score, change in global CDR stage, and log hazard ratio), so they are compared on this unit-free axis."}
 sim_long <- sim_results |>
   dplyr::mutate(
-    mmrm_z = mmrm_est / mmrm_se,
-    cox_z = cox_est / cox_se
+    mmrm = mmrm_est / mmrm_se,
+    mmrm_cdr = mmrm_cdr_est / mmrm_cdr_se,
+    cox = cox_est / cox_se
   ) |>
-  dplyr::select(rep, mmrm_z, cox_z) |>
+  dplyr::select(rep, mmrm, mmrm_cdr, cox) |>
   tidyr::pivot_longer(
-    cols = c("mmrm_z", "cox_z"),
+    cols = c("mmrm", "mmrm_cdr", "cox"),
     names_to = "method",
     values_to = "z"
   ) |>
-  dplyr::mutate(
-    method = ifelse(
-      method == "mmrm_z", "MMRM", "Cox PH"
-    )
-  )
+  dplyr::mutate(method = unname(method_labels[method]))
 
-ggplot(sim_long, aes(x = z,
-    linetype = method)) +
-  geom_density(fill = "grey85", alpha = 0.5) +
+ggplot(sim_long, aes(x = z, linetype = method)) +
+  geom_density(fill = "grey85", alpha = 0.4, na.rm = TRUE) +
   labs(
     x = "Standardized treatment effect (estimate / model SE)",
     y = "Density",
     linetype = "Method"
   ) +
   theme_minimal(base_size = 10) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom", legend.direction = "vertical")
 ```
 
 # Discussion
 
-The historical review reveals that the convergence of AD
-trials on MMRM and change-score estimands resulted from
-three reinforcing forces. First, the regulatory requirement
-for continuous cognitive and functional co-primary
-endpoints, established by @leber1990guidelines. Second, the
-decisive empirical evidence against LOCF as a primary
-analysis method, led by @mallinckrodt2001dropout and
-codified by the @nrc2010missing panel. Third, the
-statistical efficiency advantages of modeling repeated
-continuous data relative to dichotomizing into
-time-to-event endpoints, as demonstrated by
-@donohue2011relative and @li2019relative.
+The historical review shows that three reinforcing forces
+drove the convergence of AD trials on MMRM and
+change-score estimands. The first was the regulatory
+requirement for co-primary cognitive and global endpoints,
+set by @leber1990guidelines. The global measure was a
+clinician's impression of change, not a continuous scale.
+Even so, the requirement framed benefit as change over
+time rather than as the timing of clinical events. The
+second was the decisive empirical evidence against LOCF as
+a primary analysis method. That evidence was led by
+@mallinckrodt2001dropout and codified by the
+@nrc2010missing panel. The third was the statistical
+efficiency advantage of modeling repeated continuous data
+over dichotomizing into time-to-event endpoints. This
+advantage was shown by @donohue2011relative and
+@li2019relative.
 
 Oncology, by contrast, arrived at a different equilibrium.
 Its primary endpoint, death, is inherently binary and
-irreversible. The proportional hazards framework has deep
-regulatory precedent. And no single continuous severity
-measure plays the role that ADAS-Cog or CDR-SB plays in AD
-[@fleming1996surrogate; @fda2018oncology].
+irreversible. The proportional hazards framework has long
+regulatory precedent. In addition, no single continuous
+severity measure has the role in oncology that ADAS-Cog or
+CDR-SB has in AD [@fleming1996surrogate; @fda2018oncology].
 
 ```{r discussion-vals, include=FALSE}
-power_gap <- mmrm_row$power - cox_row$power
-power_ratio <- mmrm_row$power / cox_row$power
+d_lat_cdr <- cdr_row$power - lat_row$power
+d_cdr_cox <- cox_row$power - cdr_row$power
+small_lat <- scen_row("Smaller effect", "mmrm")$Power
+small_cdr <- scen_row("Smaller effect", "mmrm_cdr")$Power
+small_cox <- scen_row("Smaller effect", "cox")$Power
+mcar_cox <- scen_row("MCAR dropout", "cox")$Power
 ```
 
-The simulation results confirm the theoretical predictions
-from the literature. MMRM yielded substantially greater
-power than Cox regression when both were applied to CDR
-data from the same simulated trial (power
-`r sprintf('%.3f', mmrm_row$power)` versus
-`r sprintf('%.3f', cox_row$power)`, an absolute gap of
-`r sprintf('%.3f', power_gap)` and a power ratio of
-`r sprintf('%.2f', power_ratio)`). It is clear why: the
-continuous analysis uses information from the full
-trajectory of scores at every visit, whereas the survival
-analysis reduces this trajectory to a single binary event.
-This gap is directionally consistent with the analytic
-inflation-factor argument of @donohue2011relative and with
-the approximately two-fold power advantage for continuous
-repeated measures reported by @li2019relative. We note,
-however, that the two prior analyses used real,
-observational ADNI data with different endpoints and
-censoring patterns, so an exact numerical match to either
-published inflation factor was neither expected nor
-attempted here. The power advantage is most pronounced in
-the MCI-to-mild-dementia transition modeled here, where
-conversion rates are modest. Many participants in this
-simulated trial will not reach the CDR $\geq$ 1.0 threshold
-by the last visit, resulting in heavy right-censoring that
-limits the information available to the Cox model.
+We now turn to the simulation. Its results agree in
+direction with the analytic argument of
+@donohue2011relative and with the simulation results of
+@li2019relative. Li et al. simulated from a model fit to
+ADNI, with endpoints and censoring patterns unlike ours.
+A numerical match with either paper was therefore neither
+expected nor attempted.
 
-Several caveats warrant emphasis. First, the comparison is
-inherently asymmetric: the MMRM uses more information from
-each participant, namely all visits, than the Cox model,
-which uses only the first conversion event. Second, the
-survival endpoint is limited by the visit schedule. True
-conversion may occur between visits, introducing interval
-censoring that the standard Cox model does not accommodate.
-Third, the relative efficiency depends on the threshold
-chosen. A threshold that most participants cross during
-follow-up would shift the balance toward the survival
-analysis. Fourth, the clinical relevance of the two
-estimands differs. A treatment effect expressed as slowing
-of CDR-SB decline addresses a different clinical question
-than one expressed as delay to a diagnostic milestone. Both
-may be meaningful to patients and regulators. The choice
-between them should be driven by the estimand framework of
-@ich2019e9r1 rather than by statistical convenience alone.
+The more useful result, in our view, is the decomposition.
+In the primary scenario, moving from the latent score to
+the observed global stage changed MMRM power by
+`r f3(d_lat_cdr)`. Moving from the MMRM on the observed
+stage to the Cox model on the same stage changed power by
+a further `r f3(d_cdr_cox)`. The latent-score MMRM is near
+its power ceiling in this scenario, so the smaller-effect
+scenario is more informative. There, power was
+`r f3(small_lat)` for the latent-score MMRM,
+`r f3(small_cdr)` for the MMRM on the observed stage, and
+`r f3(small_cox)` for the Cox model. The latent-score
+analysis is not available in practice. Some of the
+advantage that a comparison like ours would otherwise
+credit to continuous analysis is thus an advantage of a
+noise-free measure. Real instruments lie between our two
+MMRM analyses. CDR-SB, for example, is finer than the
+global stage but is measured with rating error. We have
+not simulated it.
+
+But why does the Cox model lose power in this design? The
+usual answer is heavy censoring. That answer does not fit
+here, since conversion was common and censoring light.
+Several other features are at work. First, the Cox model
+uses only the time of the first crossing and ignores later
+stages. Second, many conversions occur at month 6. At that
+visit the expected treatment difference is small. These
+events mainly reflect where participants sat within the
+CDR 0.5 band at entry. Third, conversion is known only
+to the nearest visit, which produces interval-censored
+data with many ties. Fourth, dropout depends on severity
+within a stage. Censoring is therefore informative for the
+Cox model. Under MCAR dropout, Cox power was
+`r f3(mcar_cox)`, against `r f3(cox_row$power)` in the
+primary scenario. The general cost of reducing a
+continuous measure to a threshold is well documented
+[@altman2006cost].
+
+Under the null scenario, the type I error rates were
+`r f3(scen_row("Null", "mmrm")$Power)`,
+`r f3(scen_row("Null", "mmrm_cdr")$Power)`, and
+`r f3(scen_row("Null", "cox")$Power)` for the three
+analyses. With 500 replications, observed rates between
+about 0.031 and 0.069 are consistent with a true rate of
+0.05.
+
+Several caveats apply. First, the comparison is
+inherently asymmetric. The MMRM uses more information from
+each participant, namely all visits. The Cox model uses
+only the first conversion event. Second, the survival
+endpoint is limited by the visit schedule. True conversion
+may occur between visits. This introduces interval
+censoring, which the standard Cox model does not
+accommodate. Third, all results rest on one set of
+data-generating parameters. We varied the effect size, the
+dropout mechanism, and the sample size. We did not vary
+the residual error, the staging thresholds, the
+dropout-severity coupling, or the trial duration. The
+relative efficiency presumably depends on the threshold
+chosen. Fourth, the entry rule rests on one assessment.
+A trial with a stricter entry rule or a run-in period
+would see fewer early conversions. Fifth, the clinical
+relevance of the two estimands differs. A treatment effect
+expressed as slowing of decline addresses a different
+clinical question from one expressed as delay to a
+diagnostic milestone. Both may be meaningful to patients
+and regulators. The choice between them should be driven
+by the estimand framework of @ich2019e9r1 rather than by
+statistical convenience alone.
 
 # Future research
 
-1. **Additional covariance structures.** The present
+1. **Missing-not-at-random dropout.** The present
    simulation assumes MAR dropout. Extensions under MNAR
    mechanisms (e.g., pattern-mixture models, selection
-   models) would illuminate the robustness of each method
-   under more adversarial missingness.
+   models) would show the robustness of each method under
+   more adversarial missingness.
 
 2. **Nonlinear trajectories.** AD progression is not
    strictly linear, particularly in the transition from
@@ -956,40 +1090,43 @@ between them should be driven by the estimand framework of
    alternatives.
 
 3. **Alternative survival formulations.** Interval-censored
-   survival models (e.g., @sun1996survival) and multi-state
-   models that accommodate transitions among CDR stages
-   (0.5 $\to$ 1 $\to$ 2 $\to$ 3) could recover some of the
-   information lost by standard Cox regression. Restricted
-   mean survival time [@royston2013restricted] is a further
-   alternative. It summarizes the same time-to-event data on
-   a continuous, clinically interpretable time scale rather
-   than a hazard ratio, and it would be a natural
-   survival-side comparator in a future revision of this
-   simulation.
+   survival models (e.g., @sun1996survival) could recover
+   some of the information lost by standard Cox
+   regression. So could multi-state models of transitions
+   among CDR stages (0.5 $\to$ 1 $\to$ 2 $\to$ 3).
+   Restricted mean survival time [@royston2013restricted]
+   is a further alternative. It summarizes the same
+   time-to-event data on a continuous, clinically
+   interpretable time scale and not as a hazard ratio. It
+   would be a natural survival-side comparator in a future
+   revision of this simulation. The PMRM
+   [@raket2022pmrm], which also expresses effects as time,
+   is a further comparator on the longitudinal side.
 
 4. **Joint modeling.** Joint models of longitudinal CDR
    trajectories and the time-to-conversion event
    [@rizopoulos2011dynamic] could unify the two analytic
-   approaches, potentially offering both the efficiency of
-   longitudinal modeling and the clinical interpretability
-   of a time-to-event estimand.
+   approaches. They could potentially offer both the
+   efficiency of longitudinal modeling and the clinical
+   interpretability of a time-to-event estimand.
 
 5. **Software tools.** An R package implementing the
-   simulation framework and providing power calculation
-   utilities for both MMRM and survival designs in AD
-   trials would facilitate trial planning.
+   simulation framework would help with trial planning.
+   It would also provide power calculation utilities for
+   both MMRM and survival designs in AD trials.
 
 6. **Applied validation.** Retrospective application of
    both methods to completed trial datasets (e.g., from the
-   ADCS or ADNI) would ground-truth the simulation
-   findings in real data with genuine missingness patterns
-   and measurement properties.
+   ADCS or ADNI) would check the simulation findings
+   against real data. Such data have genuine missingness
+   patterns and measurement properties.
 
-7. **Estimand alignment.** Further work is needed to
-   clarify how the ICH E9(R1) estimand framework should
-   be applied when the same underlying data support both
-   change-score and time-to-event estimands, particularly
-   regarding the handling of intercurrent events such as
-   treatment switching or rescue medication.
+7. **Estimand alignment.** Further work is needed on how
+   to apply the ICH E9(R1) estimand framework in one
+   setting. In that setting, the same underlying data
+   support both change-score and time-to-event estimands.
+   A particular issue is the handling of intercurrent
+   events such as treatment switching or rescue
+   medication.
 
 # References

@@ -5,3 +5,4 @@
 | Staged PDF | Source | Version | Rendered |
 |---|---|---|---|
 | `report-2026-08-15-1638-4b5c7a8.pdf` | `~/prj/res/13-mmrm-vs-survival-ad/mmrmsurvival/analysis/report/report.Rmd` | `4b5c7a8` | 2026-08-15 16:38 PDT |
+| `report-2026-11-19-2056-d102506-wip.pdf` | `~/prj/res/13-mmrm-vs-survival-ad/mmrmsurvival/analysis/report/report.Rmd` | `d102506-wip` | 2026-11-19 20:56 PST |
